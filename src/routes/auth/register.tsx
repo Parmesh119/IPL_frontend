@@ -7,14 +7,29 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { register_schema, type TRegister } from '@/schemas/auth-schema'
 import { toast } from "sonner"
-import { Link } from '@tanstack/react-router'
+import { Link, redirect, useNavigate } from '@tanstack/react-router'
+import { authService } from '@/lib/auth'
+import { registerAction } from '@/lib/actions'
+import { useMutation } from '@tanstack/react-query' 
 import { Eye, EyeOff } from 'lucide-react'
+
 
 export const Route = createFileRoute('/auth/register')({
   component: RegisterComponent,
+  loader: async () => {
+    const isLogedIn = await authService.isLoggedIn()
+    if(isLogedIn) {
+      return redirect({ to: '/'})
+    }
+    return {
+      title: 'Register',
+    }
+  }
 })
 
 function RegisterComponent() {
+
+  const navigate = useNavigate()
 
   const [showPassword, setShowPassword] = useState(false)
 
@@ -28,12 +43,37 @@ function RegisterComponent() {
     formState: { errors },
   } = useForm<TRegister>({
     resolver: zodResolver(register_schema),
+    defaultValues: {
+      username: '',
+      name: '',
+      password: '',
+    }
+  })
+
+  const registerMutation = useMutation({
+    mutationFn: registerAction,
+    onSuccess: async (data) => {
+
+      if(data) {
+        toast.success('Registration Successful', {
+        description: (
+          <span className="text-black">
+            You can now login with your credentials
+          </span>
+        ),
+      }
+    )
+        navigate({ to: '/auth/login' })
+      }
+    },
+    onError: (error) => {
+      console.error('Registration error:', error)
+      toast.error(`Registration failed: ${error.message}`)
+    }
   })
 
   const onSubmit = (data: TRegister) => {
-    toast.success('Registration successful!')
-    console.log('Form Data:', data)
-    // Handle registration logic here
+    registerMutation.mutate(data)
   }
 
   return (

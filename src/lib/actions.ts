@@ -1,5 +1,5 @@
 import  axios from 'axios'
-import { type TLogin, type TAuthResponse } from '@/schemas/auth-schema'
+import { type TLogin, type TAuthResponse, type TRegister } from '@/schemas/auth-schema'
 
 export function getBackendUrl() {
     const backendUrl = import.meta.env.BACKEND_URL || 'http://localhost:8080'
@@ -7,5 +7,10 @@ export function getBackendUrl() {
 }
 export const loginAction = async (data: TLogin): Promise<TAuthResponse> => {
     const response = await axios.post(`${getBackendUrl()}/api/auth/login`, data)
+    return response.data
+}
+
+export const registerAction = async (data: TRegister): Promise<TLogin> => {
+    const response = await axios.post(`${getBackendUrl()}/api/auth/register`, data)
     return response.data
 }

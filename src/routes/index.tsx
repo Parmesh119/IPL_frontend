@@ -10,9 +10,9 @@ function App() {
   return (
     <div className="min-h-screen bg-purple-50 text-gray-800">
       <Navbar />
-      <main className="container mx-auto px-4 space-y-24 py-12">
-        <LandingPage />
-      </main>
+        <main className="container mx-auto px-4 space-y-24 py-12">
+          <LandingPage />
+        </main>
     </div>
   )
 }

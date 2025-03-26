@@ -1,14 +1,32 @@
 "use client"
 
+import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { useState } from 'react'
+import { authService } from '@/lib/auth'
 import { Menu, X } from 'lucide-react'
+import { Button } from '../ui/button'
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      const isLogIn = await authService.isLoggedIn()
+      setIsLoggedIn(isLogIn)
+    }
+    checkLoginStatus()
+  }, [])
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
+  }
+
+  const handleLogout = () => {
+    // Clear localStorage and update state
+    localStorage.clear()
+    setIsLoggedIn(false)
+    setIsMenuOpen(false) // Close the menu if open
   }
 
   return (
@@ -25,18 +43,24 @@ export default function Navbar() {
             Home
           </Link>
           <div className="flex space-x-4">
-            <Link
-              to="/auth/login"
-              className="px-5 py-2 bg-yellow-400 text-black font-medium rounded-lg shadow-md hover:bg-yellow-500 transition duration-300"
-            >
-              Login
-            </Link>
-            <Link
-              to="/auth/register"
-              className="px-5 py-2 bg-white text-black font-medium border border-black-400 rounded-lg shadow-md hover:bg-gray-200 hover:text-black transition duration-300"
-            >
-              Register
-            </Link>
+            {
+              isLoggedIn ? (
+                <>
+                  <Button onClick={handleLogout} className="text-white hover:text-yellow-400 transition duration-200 text-xl font-semibold">
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link to="/auth/login" className="text-white hover:text-yellow-400 transition duration-200 text-xl font-semibold">
+                    Login
+                  </Link>
+                  <Link to="/auth/register" className="text-white hover:text-yellow-400 transition duration-200 text-xl font-semibold">
+                    Register
+                  </Link>
+                </>
+              )
+            }
           </div>
         </div>
 
@@ -59,20 +83,24 @@ export default function Navbar() {
           >
             Home
           </Link>
-          <Link
-            to="/auth/login"
-            className="block cursor-pointer px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 mx-4 my-2 text-center transition duration-300"
-            onClick={toggleMenu}
-          >
-            Login
-          </Link>
-          <Link
-            to="/auth/register"
-            className="block cursor-pointer px-4 py-2 bg-white text-black border border-yellow-400 rounded-lg hover:bg-yellow-400 hover:text-white mx-4 my-2 text-center transition duration-300"
-            onClick={toggleMenu}
-          >
-            Register
-          </Link>
+          {
+              isLoggedIn ? (
+                <>
+                  <Button onClick={handleLogout}  className="text-white hover:text-yellow-400 transition duration-200 text-xl font-semibold">
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link to="/auth/login" className="text-white hover:text-yellow-400 transition duration-200 text-xl font-semibold">
+                    Login
+                  </Link>
+                  <Link to="/auth/register" className="text-white hover:text-yellow-400 transition duration-200 text-xl font-semibold">
+                    Register
+                  </Link>
+                </>
+              )
+            }
         </div>
       )}
     </nav>

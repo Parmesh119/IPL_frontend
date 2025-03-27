@@ -19,6 +19,8 @@ import {
     DropdownMenuItem,
 } from "@/components/ui/dropdown-menu"
 
+import { Link } from "@tanstack/react-router"
+
 import { useNavigate } from "@tanstack/react-router"
 
 const items = [
@@ -29,7 +31,7 @@ const items = [
     },
     {
         title: "Dashboard",
-        url: "/dashboard",
+        url: "/app/dashboard",
         icon: LayoutDashboard,
     },
     {
@@ -74,10 +76,10 @@ export function AppSidebar() {
                             {items.map((item) => (
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton asChild>
-                                        <a href={item.url}>
+                                        <Link to={item.url}>
                                             <item.icon />
                                             <span>{item.title}</span>
-                                        </a>
+                                        </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                             ))}

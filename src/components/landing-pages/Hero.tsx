@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { authService } from '@/lib/auth'
-import { Alert } from '@/components/ui/alert'
 import { toast } from 'sonner'
 
 export default function Hero() {
@@ -25,7 +24,7 @@ export default function Hero() {
         if (isLoggedIn) {
             e.preventDefault() // Prevent navigation
             toast.info('You are already logged in! Redirecting to dashboard...')
-            navigate({ to: "/dashboard" }) 
+            navigate({ to: "/app/dashboard" }) 
         } else {
             navigate({ to: path }) // Navigate to the desired path
         }

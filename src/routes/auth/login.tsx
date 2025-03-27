@@ -63,7 +63,7 @@ function LoginComponent() {
         ),
       })
 
-      navigate({ to: '/dashboard' })
+      navigate({ to: '/app/dashboard' })
     },
     onError: (error) => {
       console.error('Login error:', error)

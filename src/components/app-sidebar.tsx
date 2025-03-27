@@ -1,5 +1,5 @@
 import { User, Home, ChevronUp, User2, Shield, Trophy, Settings, LayoutDashboard } from "lucide-react"
-
+import { BadgeCheck, LogOut, Moon, Sun, ReceiptIndianRupeeIcon } from 'lucide-react'
 import {
     Sidebar,
     SidebarContent,
@@ -23,6 +23,8 @@ import { Link } from "@tanstack/react-router"
 
 import { useNavigate } from "@tanstack/react-router"
 
+import { useTheme } from "@/components/theme-provider"
+
 const items = [
     {
         title: "Home",
@@ -36,7 +38,7 @@ const items = [
     },
     {
         title: "Players",
-        url: "#",
+        url: "/app/players/",
         icon: User,
     },
     {
@@ -58,8 +60,9 @@ const items = [
 
 export function AppSidebar() {
 
+    const { setTheme, theme } = useTheme()
     const navigate = useNavigate()
-    
+
     const hadleLogout = () => {
         localStorage.clear()
         navigate({ to: "/auth/login" })
@@ -89,38 +92,54 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                    <SidebarMenu>
-                        <SidebarMenuItem>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <SidebarMenuButton className="flex items-center space-x-2">
-                                        <User2 />
-                                        <span>Username</span>
-                                        <ChevronUp className="ml-auto" />
-                                    </SidebarMenuButton>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                    side="top"
-                                    sideOffset={10}
-                                    className="w-[--radix-popper-anchor-width] ml-24"
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <SidebarMenuButton className="flex items-center space-x-2">
+                                    <User2 />
+                                    <span>Username</span>
+                                    <ChevronUp className="ml-auto" />
+                                </SidebarMenuButton>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                side="top"
+                                sideOffset={10}
+                                className="w-[--radix-popper-anchor-width] ml-24"
+                            >
+                                <DropdownMenuItem className="cursor-pointer flex items-center space-x-2">
+                                    <BadgeCheck className="w-4 h-4" />
+                                    <span>Account</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="cursor-pointer flex items-center space-x-2">
+                                    <ReceiptIndianRupeeIcon className="w-4 h-4" />
+                                    <span>Billing</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => {
+                                        setTheme(theme === "light" ? "dark" : "light")
+                                    }}
+                                    className="cursor-pointer flex items-center space-x-2"
                                 >
-                                    <DropdownMenuItem className="cursor-pointer">
-                                        <span>Account</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="cursor-pointer">
-                                        <span>Billing</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="cursor-pointer">
-                                        <span>Change mode</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={hadleLogout} className="cursor-pointer">
-                                        <span>Sign out</span>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </SidebarMenuItem>
-                    </SidebarMenu>
-                </SidebarFooter>
+                                    {theme === "light" ? (
+                                        <Moon className="w-4 h-4" />
+                                    ) : (
+                                        <Sun className="w-4 h-4" />
+                                    )}
+                                    <span>Change mode</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={hadleLogout}
+                                    className="cursor-pointer flex items-center space-x-2"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    <span>Sign out</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarFooter>
         </Sidebar>
     )
 }

@@ -18,12 +18,9 @@ export const Route = createFileRoute('/auth/login')({
   loader: async () => {
     const isLoggedIn = await authService.isLoggedIn()
     if (isLoggedIn) {
-      return redirect({ to: '/' })
+      return redirect({ to: '/app/dashboard' })
     }
-    return {
-      title: 'Login',
-    }
-  }
+  },
 })
 
 function LoginComponent() {

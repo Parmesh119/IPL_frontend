@@ -37,13 +37,8 @@ const items = [
         icon: LayoutDashboard,
     },
     {
-        title: "Players",
-        url: "/app/players/",
-        icon: User,
-    },
-    {
         title: "Teams",
-        url: "#",
+        url: "/app/teams",
         icon: Shield,
     },
     {
@@ -55,6 +50,11 @@ const items = [
         title: "Settings",
         url: "#",
         icon: Settings,
+    },
+    {
+        title: "Players",
+        link: <Link to="/app/players"><User /></Link>,
+        icon: User2,
     },
 ]
 

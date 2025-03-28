@@ -15,6 +15,7 @@ import { Route as AppRouteImport } from './routes/app/route'
 import { Route as IndexImport } from './routes/index'
 import { Route as AuthRegisterImport } from './routes/auth/register'
 import { Route as AuthLoginImport } from './routes/auth/login'
+import { Route as AppTeamsIndexImport } from './routes/app/teams/index'
 import { Route as AppPlayersIndexImport } from './routes/app/players/index'
 import { Route as AppDashboardIndexImport } from './routes/app/dashboard/index'
 
@@ -42,6 +43,12 @@ const AuthLoginRoute = AuthLoginImport.update({
   id: '/auth/login',
   path: '/auth/login',
   getParentRoute: () => rootRoute,
+} as any)
+
+const AppTeamsIndexRoute = AppTeamsIndexImport.update({
+  id: '/teams/',
+  path: '/teams/',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 
 const AppPlayersIndexRoute = AppPlayersIndexImport.update({
@@ -102,6 +109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPlayersIndexImport
       parentRoute: typeof AppRouteImport
     }
+    '/app/teams/': {
+      id: '/app/teams/'
+      path: '/teams'
+      fullPath: '/app/teams'
+      preLoaderRoute: typeof AppTeamsIndexImport
+      parentRoute: typeof AppRouteImport
+    }
   }
 }
 
@@ -110,11 +124,13 @@ declare module '@tanstack/react-router' {
 interface AppRouteRouteChildren {
   AppDashboardIndexRoute: typeof AppDashboardIndexRoute
   AppPlayersIndexRoute: typeof AppPlayersIndexRoute
+  AppTeamsIndexRoute: typeof AppTeamsIndexRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppDashboardIndexRoute: AppDashboardIndexRoute,
   AppPlayersIndexRoute: AppPlayersIndexRoute,
+  AppTeamsIndexRoute: AppTeamsIndexRoute,
 }
 
 const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
@@ -128,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/auth/register': typeof AuthRegisterRoute
   '/app/dashboard': typeof AppDashboardIndexRoute
   '/app/players': typeof AppPlayersIndexRoute
+  '/app/teams': typeof AppTeamsIndexRoute
 }
 
 export interface FileRoutesByTo {
@@ -137,6 +154,7 @@ export interface FileRoutesByTo {
   '/auth/register': typeof AuthRegisterRoute
   '/app/dashboard': typeof AppDashboardIndexRoute
   '/app/players': typeof AppPlayersIndexRoute
+  '/app/teams': typeof AppTeamsIndexRoute
 }
 
 export interface FileRoutesById {
@@ -147,6 +165,7 @@ export interface FileRoutesById {
   '/auth/register': typeof AuthRegisterRoute
   '/app/dashboard/': typeof AppDashboardIndexRoute
   '/app/players/': typeof AppPlayersIndexRoute
+  '/app/teams/': typeof AppTeamsIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -158,6 +177,7 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/app/dashboard'
     | '/app/players'
+    | '/app/teams'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -166,6 +186,7 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/app/dashboard'
     | '/app/players'
+    | '/app/teams'
   id:
     | '__root__'
     | '/'
@@ -174,6 +195,7 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/app/dashboard/'
     | '/app/players/'
+    | '/app/teams/'
   fileRoutesById: FileRoutesById
 }
 
@@ -214,7 +236,8 @@ export const routeTree = rootRoute
       "filePath": "app/route.tsx",
       "children": [
         "/app/dashboard/",
-        "/app/players/"
+        "/app/players/",
+        "/app/teams/"
       ]
     },
     "/auth/login": {
@@ -229,6 +252,10 @@ export const routeTree = rootRoute
     },
     "/app/players/": {
       "filePath": "app/players/index.tsx",
+      "parent": "/app"
+    },
+    "/app/teams/": {
+      "filePath": "app/teams/index.tsx",
       "parent": "/app"
     }
   }

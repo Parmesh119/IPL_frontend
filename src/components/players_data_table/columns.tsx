@@ -11,6 +11,9 @@ export type Payment = {
   battingStyle: string
   bowlingStyle: string
   team: string
+  basePrice: string
+  sellPrice?: string |  null
+  status: "Pending" | "Sold" | "Unsold"
 }
 
 export const columns: ColumnDef<Payment>[] = [
@@ -46,5 +49,17 @@ export const columns: ColumnDef<Payment>[] = [
   {
     accessorKey: "team",
     header: "Team",
+  },
+  {
+    accessorKey: "basePrice",
+    header: "Base Price",
+  },
+  {
+    accessorKey: "sellPrice",
+    header: "Sell Price",
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
   }
 ]

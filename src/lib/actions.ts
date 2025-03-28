@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { type TLogin, type TAuthResponse, type TRegister } from '@/schemas/auth-schema'
-import { type Payment } from '@/components/players/columns'
+import { type Payment } from '@/components/players_data_table/columns'
 
 export function getBackendUrl() {
     const backendUrl = import.meta.env.BACKEND_URL || 'http://localhost:8080'

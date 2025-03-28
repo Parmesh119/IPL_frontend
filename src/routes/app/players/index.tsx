@@ -9,13 +9,13 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
-import { type Payment, columns } from "@/components/players/columns"
-import { DataTable } from "@/components/players/data_table"
+import { type Payment, columns } from "@/components/players_data_table/columns"
+import { DataTable } from "@/components/players_data_table/data_table"
 import { authService } from "@/lib/auth"
 import { redirect } from "@tanstack/react-router"
 import { toast } from "sonner"
-import { useQuery } from '@tanstack/react-query';
-import {listPlayersAction} from "@/lib/actions"
+// import { useQuery } from '@tanstack/react-query';
+// import {listPlayersAction} from "@/lib/actions"
 
 export const Route = createFileRoute('/app/players/')({
   component: RouteComponent,
@@ -33,22 +33,54 @@ export const Route = createFileRoute('/app/players/')({
   }
 })
 
+async function getData(): Promise<Payment[]> {
+  // Fetch data from your API here.
+  return [
+    {
+      srNo: 1,
+      name: "Player 1",
+      country: "Country A",
+      age: 25,
+      role: "Batsman",
+      battingStyle: "Right-handed",
+      bowlingStyle: "Right-arm medium",
+      team: "Team A",
+      basePrice: "1 Cr",
+      sellPrice: "1.5 Cr",
+      status: "Sold",
+    },
+    {
+      srNo: 2,
+      name: "Player 2",
+      country: "Country B",
+      age: 30,
+      role: "Bowler",
+      battingStyle: "Left-handed",
+      bowlingStyle: "Left-arm fast",
+      team: "Team B",
+      basePrice: "2 Cr",
+      sellPrice: null,
+      status: "Unsold",
+    },
+    {
+      srNo: 3,
+      name: "Player 3",
+      country: "Country C",
+      age: 28,
+      role: "All-rounder",
+      battingStyle: "Right-handed",
+      bowlingStyle: "Right-arm off-spin",
+      team: "Team C",
+      basePrice: "1.5 Cr",
+      sellPrice: null,
+      status: "Pending",
+    },
+  ]
+}
+
 
 async function RouteComponent() {
-
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["players"],
-    queryFn: listPlayersAction,
-  });
-  
-  if (isLoading) {
-    toast.loading("Loading players...");
-  }
-  
-  if (isError) {
-    toast.error("Failed to load players.");
-    console.error("Error fetching players:", error);
-  }
+  const data = await getData()
 
   return (
     <SidebarInset className="w-full">
@@ -71,7 +103,7 @@ async function RouteComponent() {
       </header>
       <Separator className="mb-4" />
       <div className="container mx-auto py-2">
-        <DataTable columns={columns} data={data ?? []} />
+        <DataTable columns={columns} data={data} />
       </div>
     </SidebarInset>
   )

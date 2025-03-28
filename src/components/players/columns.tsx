@@ -1,22 +1,9 @@
 "use client"
 
 import { type ColumnDef } from "@tanstack/react-table"
+import { type Player } from "@/schemas/players"
 
-export type Payment = {
-  srNo: number
-  name: string
-  country: string
-  age: number
-  role: string
-  battingStyle: string
-  bowlingStyle: string
-  team: string
-  basePrice: string
-  sellPrice?: string |  null
-  status: "Pending" | "Sold" | "Unsold"
-}
-
-export const columns: ColumnDef<Payment>[] = [
+export const columns: ColumnDef<Player>[] = [
   {
     accessorKey: "srNo",
     header: "Sr No.",
@@ -47,7 +34,7 @@ export const columns: ColumnDef<Payment>[] = [
     header: "Bowling Style",
   },
   {
-    accessorKey: "team",
+    accessorKey: "teamId",
     header: "Team",
   },
   {

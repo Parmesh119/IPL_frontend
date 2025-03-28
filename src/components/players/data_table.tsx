@@ -47,11 +47,15 @@ interface DataTableProps<TData, TValue> {
 
 interface Player {
     name: string;
+    country: string;
     age: number;
     role: string;
     battingStyle: string;
     bowlingStyle?: string;
-    country: string;
+    teamId: string;
+    basePrice: string;
+    sellPrice?: string | null;
+    status: "Pending" | "Sold" | "Unsold";
 }
 
 export function DataTable<TData, TValue>({
@@ -64,11 +68,15 @@ export function DataTable<TData, TValue>({
     const [open, setOpen] = useState(false);
     const [newPlayer, setNewPlayer] = useState<Player>({
         name: "",
+        country: "",
         age: 0,
         role: "",
         battingStyle: "",
         bowlingStyle: undefined,
-        country: "",
+        teamId: "",
+        basePrice: "",
+        sellPrice: undefined,
+        status: "Pending",
     });
 
     const table = useReactTable({
@@ -149,7 +157,18 @@ export function DataTable<TData, TValue>({
 
     const handleCancelAdd = () => {
         setOpen(false);
-        setNewPlayer({ name: "", age: 0, role: "", battingStyle: "", bowlingStyle: undefined, country: "" });
+        setNewPlayer({ 
+            name: "", 
+            country: "",
+            age: 0, 
+            role: "", 
+            battingStyle: "", 
+            bowlingStyle: undefined, 
+            teamId: "",
+            basePrice: "",
+            sellPrice: undefined,
+            status: "Pending",
+         });
     };
 
     return (
@@ -218,7 +237,7 @@ export function DataTable<TData, TValue>({
                                 <Label htmlFor="name" className="text-right">
                                     Name
                                 </Label>
-                                <Input id="name" name="name" value={newPlayer.name} onChange={handleInputChange} className="col-span-3" />
+                                <Input id="name" placeholder="Player Name" autoFocus name="name" value={newPlayer.name} onChange={handleInputChange} className="col-span-3" />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
                                 <Label htmlFor="age" className="text-right">
@@ -230,7 +249,7 @@ export function DataTable<TData, TValue>({
                                 <Label htmlFor="country" className="text-right">
                                     Country
                                 </Label>
-                                <Input id="country" name="country" value={newPlayer.country} onChange={handleCountryChange} className="col-span-3" />
+                                <Input id="country" placeholder="Country" name="country" value={newPlayer.country} onChange={handleCountryChange} className="col-span-3" />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
                                 <Label htmlFor="role" className="text-right ">
@@ -264,7 +283,7 @@ export function DataTable<TData, TValue>({
                             </div>
                             {newPlayer.role === "Bowler" || newPlayer.role === "All-Rounder" ? (
                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="bowlingStyle" className="text-right">
+                                    <Label htmlFor="bowlingStyle" className="text-left">
                                         Bowling Style
                                     </Label>
                                     <Select onValueChange={handleBowlingStyleChange} defaultValue={newPlayer.bowlingStyle}>
@@ -279,6 +298,18 @@ export function DataTable<TData, TValue>({
                                     </Select>
                                 </div>
                             ) : null}
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="basePrice" className="text-right">
+                                    Base Price
+                                </Label>
+                                <Input id="basePrice" placeholder="Base Price" type="text" name="basePrice" value={newPlayer.basePrice} onChange={handleInputChange} className="col-span-3" />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="sellPrice" className="text-right">
+                                    Sell Price
+                                </Label>
+                                <Input id="sellPrice" placeholder="Sell Price" type="text" name="basePrice" value={newPlayer.basePrice} onChange={handleInputChange} className="col-span-3" />
+                            </div>
                         </div>
                         <DialogFooter>
                             <Button className="cursor-pointer" type="button" variant="secondary" onClick={handleCancelAdd}>

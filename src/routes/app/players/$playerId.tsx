@@ -72,7 +72,7 @@ function RouteComponent() {
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>
-              <BreadcrumbList>
+              <BreadcrumbList className='tracking-wider'>
                 <BreadcrumbItem>
                   <Link to="/app/players"><BreadcrumbLink>Players</BreadcrumbLink></Link>
                 </BreadcrumbItem>

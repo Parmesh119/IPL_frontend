@@ -54,6 +54,7 @@ export type TRegister = z.infer<typeof register_schema>
 
 export type TAuthResponse = {
     accessToken: string
+    refreshToken: string
 }
 
 export type TUserJwtInformation = {
@@ -62,4 +63,8 @@ export type TUserJwtInformation = {
     iat: number
     exp: number
 }
+
+export type TRefreshTokenRequest = {
+    refreshToken: string
+  }
 

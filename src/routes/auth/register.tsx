@@ -169,7 +169,7 @@ function RegisterComponent() {
         {/* Submit Button */}
         <Button
           type="submit"
-          className="w-full py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full cursor-pointer py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           Register
         </Button>
@@ -180,7 +180,7 @@ function RegisterComponent() {
             Already have an account?{' '}
             <Link
               to="/auth/login"
-              className="text-blue-600 hover:underline"
+              className="text-blue-600 cursor-pointer hover:underline"
             >
               Login
             </Link>

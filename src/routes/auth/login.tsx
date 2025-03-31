@@ -155,7 +155,7 @@ function LoginComponent() {
         {/* Submit Button */}
         <Button
           type="submit"
-          className="w-full py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full cursor-pointer py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           Login
         </Button>

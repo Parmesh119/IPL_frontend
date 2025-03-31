@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import {
   Breadcrumb,
@@ -21,39 +21,42 @@ export const Route = createFileRoute('/app/players/')({
 })
 
 async function RouteComponent() {
+  
   const { data: updatedPlayers, isLoading, error } = useQuery<Player[]>({
-    queryKey: ['playersWithTeams'],
+    queryKey: ['players'],
 
     queryFn: async () => {
       const players = await listPlayersAction();
 
       if (!players) {
-        return []; // Or return a suitable default.
+        return [];
       }
 
       const validTeamIds = players
         .map((player) => player.teamId)
-        .filter(teamId => teamId !== null && teamId !== undefined) as string[]; // Explicitly tell Typescript they are strings and that they would be mapped in the TeamMap
+        .filter(teamId => teamId !== null && teamId !== undefined) as string[];
 
       const uniqueTeamIds = [...new Set(validTeamIds)];
 
       const teamPromises = uniqueTeamIds.map((id) => getTeamById(id));
       const teams = await Promise.all(teamPromises);
 
-      const teamMap = new Map(teams.map((team) => [team.id, team.name])); //id as key and team name as the value
+      const teamMap = new Map(teams.map((team) => [team.id, team.name]));
 
       return players.map((player) => {
-        const teamName = teamMap.get(player.teamId);
+        const teamName = teamMap.get(player.teamId ?? '');
         return {
           ...player,
-          teamId: teamName || player.teamId, // Use the team name if available, otherwise keep the original value
+          teamId: teamName || player.teamId,
         };
       });
+      
     },
+    
   });
 
   if (isLoading) {
-    return <div className='flex items-center m-auto'><LoaderCircle /> Loading...</div>
+    return <div className='flex items-center m-auto'><LoaderCircle />&nbsp; Loading...</div>
   }
 
   if (error) {

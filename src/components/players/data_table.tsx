@@ -28,40 +28,28 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Plus } from "lucide-react"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-    DialogFooter
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query"
+import { getAllTeams } from "@/lib/actions"
+import { type Player, PlayerSchema } from "@/schemas/players"
+import { Link } from "@tanstack/react-router"
+import AddPlayerDialog from "@/components/players/AddPlayerDialog"; // Import the new component
+import { useTheme } from "@/components/theme-provider"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { addPlayerAction } from "@/lib/actions"
+import { toast } from "sonner"
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
     data: TData[]
 }
 
-interface Player {
-    name: string;
-    country: string;
-    age: number;
-    role: string;
-    battingStyle: string;
-    bowlingStyle?: string;
-    teamId: string;
-    basePrice: string;
-    sellPrice?: string | null;
-    status: "Pending" | "Sold" | "Unsold";
-}
 
 export function DataTable<TData, TValue>({
     columns,
     data,
 }: DataTableProps<TData, TValue>) {
+    
+    const { theme } = useTheme()
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
     const [selectedRoles, setSelectedRoles] = useState<string[]>([])
     const [selectedStatus, setSelectedStatus] = useState<string[]>([])
@@ -69,14 +57,14 @@ export function DataTable<TData, TValue>({
     const [newPlayer, setNewPlayer] = useState<Player>({
         name: "",
         country: "",
-        age: 0,
+        age: undefined,
         role: "",
         battingStyle: "",
-        bowlingStyle: undefined,
+        bowlingStyle: "",
         teamId: "",
         basePrice: "",
-        sellPrice: undefined,
-        status: "Pending",
+        sellPrice: "",
+        status: "Pending"
     });
 
     const table = useReactTable({
@@ -91,9 +79,9 @@ export function DataTable<TData, TValue>({
         }
     })
 
-    const roles = ["Batsman", "Bowler", "Wicketkeeper", "All-Rounder"]
+    const roles = ["Batsman", "Bowler", "Wicketkeeper", "All-rounder"]
     const status = ["Pending", "Sold", "Unsold"]
-    const battingStyles = ["Right-Hand", "Left-Hand"];
+    const battingStyles = ["Right-handed", "Left-handed"];
     const bowlingStyles = ["Fast", "Spin", "Medium"];
 
     const toggleRole = (role: string) => {
@@ -122,54 +110,81 @@ export function DataTable<TData, TValue>({
         );
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setNewPlayer(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleRoleChange = (role: string) => {
-        setNewPlayer(prev => ({ ...prev, role }));
-    };
-
-    const handleBattingStyleChange = (battingStyle: string) => {
-        setNewPlayer(prev => ({ ...prev, battingStyle }));
-    };
-
-    const handleBowlingStyleChange = (bowlingStyle: string | undefined) => {
-        setNewPlayer(prev => ({ ...prev, bowlingStyle }));
-    };
-
-    const handleCountryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setNewPlayer(prev => ({...prev, country: e.target.value}))
-    }
-
     const handleAddPlayer = () => {
-        // Validation
-        if (!newPlayer.name || !newPlayer.age || !newPlayer.role || !newPlayer.battingStyle || !newPlayer.country) {
-            alert("Please fill in all required fields.");
+        // Find the selected team's ID based on the name
+        const selectedTeam = teams?.find((team) => team.name === newPlayer.teamId);
+
+        if (!selectedTeam) {
+            alert("Invalid team selection");
             return;
         }
+
+        // Convert player data to match schema (replace team name with ID)
+        const parsedPlayer = {
+            ...newPlayer,
+            teamId: selectedTeam.id,  // Replace name with ID
+            age: newPlayer.age ? Number(newPlayer.age) : 0,
+        };
+
+        // Validate using Zod
+        const validationResult = PlayerSchema.safeParse(parsedPlayer);
+
+        if (!validationResult.success) {
+            const errorMessages = validationResult.error.errors.map((err) => err.message).join("\n");
+            alert(errorMessages);
+            return;
+        }
+        addPlayer(parsedPlayer);
         setOpen(false);
-        console.log("Adding player:", newPlayer);
-        // Here you would add the newPlayer to your data array and update the table.
-        // For this example, I'm just logging the player to the console.
     };
+
+    const { mutate: addPlayer } = useMutation({
+        mutationFn: async (player: Player) => {
+            const data = await addPlayerAction(player);
+            return data
+        },
+
+        onSuccess: () => {
+            toast.success("Player added successfully");
+            window.location.reload();
+            setOpen(false);
+        },
+        onError: (err) => {
+            alert(`Error adding player: ${err.message}`);
+            toast.error("Error adding player");
+        },
+    });
 
     const handleCancelAdd = () => {
         setOpen(false);
-        setNewPlayer({ 
-            name: "", 
+        setNewPlayer({
+            name: "",
             country: "",
-            age: 0, 
-            role: "", 
-            battingStyle: "", 
-            bowlingStyle: undefined, 
+            age: 0,
+            role: "",
+            battingStyle: "",
+            bowlingStyle: "",
             teamId: "",
             basePrice: "",
-            sellPrice: undefined,
+            sellPrice: "",
             status: "Pending",
-         });
+        });
     };
+
+    const { data: teams, isLoading, error } = useQuery({
+        queryKey: ["teams"],
+        queryFn: async () => {
+            const teams = await getAllTeams();
+            return teams
+        },
+    });
+
+    if (isLoading) {
+        return <div className='flex items-center m-auto'>Loading teams...</div>
+    }
+    if (error) {
+        return <div className='flex items-center m-auto'> Error while fetching teams data</div>
+    }
 
     return (
         <div className="tracking-wider">
@@ -196,6 +211,7 @@ export function DataTable<TData, TValue>({
                                     <Checkbox
                                         checked={selectedRoles.includes(role)}
                                         onCheckedChange={() => toggleRole(role)}
+                                        className={`"border" ${theme === "dark" ? "border-white" : "border-black"}`}
                                     />
                                     <span>{role}</span>
                                 </DropdownMenuItem>
@@ -214,6 +230,7 @@ export function DataTable<TData, TValue>({
                                     <Checkbox
                                         checked={selectedStatus.includes(stat)}
                                         onCheckedChange={() => toggleStatus(stat)}
+                                        className={`"border" ${theme === "dark" ? "border-white" : "border-black"}`}
                                     />
                                     <span>{stat}</span>
                                 </DropdownMenuItem>
@@ -221,106 +238,20 @@ export function DataTable<TData, TValue>({
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
-                <Dialog open={open} onOpenChange={setOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="bg-blue-500 text-white tracking-wider w-full sm:w-auto cursor-pointer" variant="outline">Add Player</Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                        <DialogHeader>
-                            <DialogTitle>Add Player</DialogTitle>
-                            <DialogDescription>
-                                Add a new player to the list.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="name" className="text-right">
-                                    Name
-                                </Label>
-                                <Input id="name" placeholder="Player Name" autoFocus name="name" value={newPlayer.name} onChange={handleInputChange} className="col-span-3" />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="age" className="text-right">
-                                    Age
-                                </Label>
-                                <Input id="age" type="number" name="age" value={newPlayer.age} onChange={handleInputChange} className="col-span-3" />
-                            </div>
-                             <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="country" className="text-right">
-                                    Country
-                                </Label>
-                                <Input id="country" placeholder="Country" name="country" value={newPlayer.country} onChange={handleCountryChange} className="col-span-3" />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="role" className="text-right ">
-                                    Role
-                                </Label>
-                                <Select onValueChange={handleRoleChange} defaultValue={newPlayer.role}>
-                                    <SelectTrigger className="col-span-3 cursor-pointer">
-                                        <SelectValue placeholder="Select Role" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {roles.map(role => (
-                                            <SelectItem className="cursor-pointer" key={role} value={role}>{role}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="battingStyle" className="text-right">
-                                    Batting Style
-                                </Label>
-                                <Select onValueChange={handleBattingStyleChange} defaultValue={newPlayer.battingStyle}>
-                                    <SelectTrigger className="col-span-3 cursor-pointer">
-                                        <SelectValue placeholder="Select Batting Style" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {battingStyles.map(style => (
-                                            <SelectItem className="cursor-pointer" key={style} value={style}>{style}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            {newPlayer.role === "Bowler" || newPlayer.role === "All-Rounder" ? (
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="bowlingStyle" className="text-left">
-                                        Bowling Style
-                                    </Label>
-                                    <Select onValueChange={handleBowlingStyleChange} defaultValue={newPlayer.bowlingStyle}>
-                                        <SelectTrigger className="col-span-3 cursor-pointer">
-                                            <SelectValue placeholder="Select Bowling Style" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {bowlingStyles.map(style => (
-                                                <SelectItem className="cursor-pointer" key={style} value={style}>{style}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            ) : null}
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="basePrice" className="text-right">
-                                    Base Price
-                                </Label>
-                                <Input id="basePrice" placeholder="Base Price" type="text" name="basePrice" value={newPlayer.basePrice} onChange={handleInputChange} className="col-span-3" />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="sellPrice" className="text-right">
-                                    Sell Price
-                                </Label>
-                                <Input id="sellPrice" placeholder="Sell Price" type="text" name="basePrice" value={newPlayer.basePrice} onChange={handleInputChange} className="col-span-3" />
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button className="cursor-pointer" type="button" variant="secondary" onClick={handleCancelAdd}>
-                                Cancel
-                            </Button>
-                            <Button className="cursor-pointer" type="submit" onClick={handleAddPlayer}>Add</Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+                <span className="border border-white rounded-md "><AddPlayerDialog
+                    open={open}
+                    setOpen={setOpen}
+                    newPlayer={newPlayer}
+                    setNewPlayer={setNewPlayer}
+                    teams={teams ?? []}
+                    roles={roles}
+                    battingStyles={battingStyles}
+                    bowlingStyles={bowlingStyles}
+                    handleAddPlayer={handleAddPlayer}
+                    handleCancelAdd={handleCancelAdd}
+                /></span>
             </div>
-            <div className="rounded-md border overflow-x-auto">
+            <div className="rounded-md border overflow-x-auto mt-4">
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -344,12 +275,27 @@ export function DataTable<TData, TValue>({
                                 <TableRow
                                     key={row.id}
                                     data-state={row.getIsSelected() && "selected"}
+                                    style={{ position: 'relative' }} // Make the row relative
                                 >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </TableCell>
                                     ))}
+                                    <Link
+                                        to={`/app/players/$playerId`}
+                                        params={{ playerId: row.original.id }}
+                                        style={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            width: '100%',
+                                            height: '100%',
+                                            color: 'inherit',
+                                            textDecoration: 'none',
+                                            zIndex: 1, // Ensure it's on top
+                                        }}
+                                    />
                                 </TableRow>
                             ))
                         ) : (

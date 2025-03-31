@@ -11,19 +11,19 @@ import {
     SidebarMenuItem,
     SidebarFooter
 } from "@/components/ui/sidebar"
-
 import {
     DropdownMenu,
     DropdownMenuTrigger,
     DropdownMenuContent,
     DropdownMenuItem,
 } from "@/components/ui/dropdown-menu"
-
 import { Link } from "@tanstack/react-router"
-
 import { useNavigate } from "@tanstack/react-router"
-
 import { useTheme } from "@/components/theme-provider"
+import { useMutation } from "@tanstack/react-query"
+import { getUserDetails } from "@/lib/actions"
+import { useState, useEffect } from "react"
+import { toast } from "sonner"
 
 const items = [
     {
@@ -60,17 +60,31 @@ const items = [
 
 export function AppSidebar() {
 
+    useEffect(() => {
+        profileMutation.mutate()
+    }, [])
     const { setTheme, theme } = useTheme()
+    const [username, setUsername] = useState("")
     const navigate = useNavigate()
 
     const hadleLogout = () => {
         localStorage.clear()
         navigate({ to: "/auth/login" })
     }
-
+    
+    const profileMutation = useMutation({
+        mutationFn: getUserDetails,
+        onSuccess: (data) => {
+            setUsername(data.username)
+        },
+        onError: (error) => {
+            toast.error("Error fetching user details")
+            console.log(error.message)
+        }
+    })
 
     return (
-        <Sidebar>
+        <Sidebar className="rounded-xl">
             <SidebarContent className="cursor-pointer" >
                 <SidebarGroup>
                     <SidebarGroupLabel className="tracking-wider">Application</SidebarGroupLabel>
@@ -98,7 +112,7 @@ export function AppSidebar() {
                             <DropdownMenuTrigger asChild>
                                 <SidebarMenuButton className="flex items-center space-x-2">
                                     <User2 />
-                                    <span>Username</span>
+                                    <span>{username ? username : "User"}</span>
                                     <ChevronUp className="ml-auto" />
                                 </SidebarMenuButton>
                             </DropdownMenuTrigger>

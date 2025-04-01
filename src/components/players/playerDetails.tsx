@@ -56,6 +56,7 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({
             >
               Edit
             </Button>
+            
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mt-6">
@@ -118,7 +119,7 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({
               </div>
               <div className="flex flex-col sm:flex-row">
                 <Label className="w-32">Bowling Style :</Label>
-                <p className="font-semibold">{player.bowlingStyle || "N/A"}</p>
+                <p className="font-semibold">{(player.role === "All-rounder" || player.role === "Bowler") ? player.bowlingStyle : "N/A"}</p>
               </div>
             </div>
           </div>

@@ -85,7 +85,9 @@ function RouteComponent() {
           </div>
         </header>
         <Separator className="mb-4" />
-        <PlayerDetails player={player} />
+        <PlayerDetails
+          player={player}
+        />
       </SidebarInset>
     </div>
   );

@@ -123,7 +123,7 @@ const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
                     {/* Name Field */}
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="name" className="text-right">Name</Label>
-                        <Input id="name" name="name" value={editPlayer.name || ""} onChange={handleInputChange} placeholder="Player Name" className="col-span-3" />
+                        <Input autoFocus id="name" name="name" value={editPlayer.name || ""} onChange={handleInputChange} placeholder="Player Name" className="col-span-3" />
                     </div>
 
                     {/* Age Field */}
@@ -213,7 +213,8 @@ const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
                     </div>
                 </div>
 
-                <DialogFooter>
+                <DialogFooter className="flex sm:w-full justify-between">
+                <Button variant="destructive" className="mr-28 w-full lg:w-30 md:w-30">Delete Player</Button>
                     <Button type="button" variant="secondary" onClick={handleCancelEdit} className="cursor-pointer">
                         Cancel
                     </Button>

@@ -48,6 +48,11 @@ export async function updatePlayerAction(player: Player): Promise<Player> {
     return response.data;
 }
 
+export async function deletePlayerAction(id: string): Promise<string> {
+    const response = await axios.delete(`${getBackendUrl()}/api/players/delete/${id}`)
+    return response.data;
+}
+
 // Team actions
 export async function getTeamById(id: string): Promise<Team> {
     const response = await axios.get(`${getBackendUrl()}/api/team/get/${id}`)

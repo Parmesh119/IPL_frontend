@@ -9,14 +9,24 @@ import {
     DialogTitle,
     DialogFooter
 } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { type Player } from "@/schemas/players"; // Adjust path
 import { useTheme } from "@/components/theme-provider";
-import { useQuery } from "@tanstack/react-query";
-import { getAllTeams } from "@/lib/actions";
+import { deletePlayerAction } from "@/lib/actions"; // Adjust path
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updatePlayerAction } from "@/lib/actions";
 import { toast } from "sonner";
@@ -33,7 +43,8 @@ interface EditPlayerDialogProps {
     battingStyles: string[];
     bowlingStyles: string[];
     handleEditPlayer: () => void
-    handleCancelEdit: () => void;
+    handleCancelEdit: () => void
+    id: string;
 }
 
 const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
@@ -47,6 +58,8 @@ const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
     bowlingStyles,
     handleEditPlayer,
     handleCancelEdit,
+    id
+
 }) => {
 
     const queryClient = useQueryClient();
@@ -61,7 +74,7 @@ const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
         },
         onSuccess: () => {
             toast.success("Player updated successfully");
-            window.location.href = "/app/players";
+            window.location.href = `/app/players/${editPlayer?.id}`;
             setOpen(false);
         },
         onError: (error) => {
@@ -94,9 +107,6 @@ const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
         setEditPlayer({ ...editPlayer, bowlingStyle: bowlingStyle || "" });
     };
 
-
-
-
     const handleUpdatePlayer = () => {
         const updatedPlayerData = {
             ...editPlayer,
@@ -107,8 +117,30 @@ const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
         updateMutation.mutate(updatedPlayerData);
     };
 
+    const deleteMutation = useMutation({
+        mutationFn: async (id: string) => {
+            const deletedPlayer = await deletePlayerAction(id);
+            return deletedPlayer;
+        },
+        onSuccess: () => {
+            toast.success("Player deleted successfully");
+            setOpen(false);
+        },
+        onError: (error) => {
+            alert(`Error deleting player:${error}`);
+            toast.error("Error deleting player");
+        },
+    });
 
-
+    const handleDeletePlayer = () => {
+        if(editPlayer.teamId != null) {
+            toast.error("Player is part of a team. Please remove the player from the team before deleting.");
+            handleCancelEdit()
+            return;
+        }
+        window.location.href = `/app/players`;
+        deleteMutation.mutate(id);
+    };
 
     const teamName = prefetchTeams?.find((team) => team.id === editPlayer.teamId)?.name || "";
 
@@ -214,7 +246,25 @@ const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
                 </div>
 
                 <DialogFooter className="flex sm:w-full justify-between">
-                <Button variant="destructive" className="mr-28 w-full lg:w-30 md:w-30">Delete Player</Button>
+                    <AlertDialog >
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive"  className="cursor-pointer mr-28 w-full lg:w-30 md:w-30">Delete Player</Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="sm:max-w-[700px] tracking-wider border" >
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete player and remove it from database.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel className="cursor-pointer" onClick={handleCancelEdit}>Cancel</AlertDialogCancel>
+                                <AlertDialogAction className="cursor-pointer" onClick={handleDeletePlayer}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+
+                    </AlertDialog>
+
                     <Button type="button" variant="secondary" onClick={handleCancelEdit} className="cursor-pointer">
                         Cancel
                     </Button>

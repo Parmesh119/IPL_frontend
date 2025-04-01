@@ -139,6 +139,7 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({
         bowlingStyles={bowlingStyles} 
         handleEditPlayer={handleEditPlayer}
         handleCancelEdit={handleCancelEdit}
+        id={player.id || ""}
       />
     </div>
   );

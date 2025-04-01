@@ -111,18 +111,19 @@ export function DataTable<TData, TValue>({
     };
 
     const handleAddPlayer = () => {
-        // Find the selected team's ID based on the name
-        const selectedTeam = teams?.find((team) => team.name === newPlayer.teamId);
+        if(newPlayer.teamId) {
+            const selectedTeam = teams?.find((team) => team.name === newPlayer.teamId);
 
-        if (!selectedTeam) {
-            alert("Invalid team selection");
-            return;
+            if (!selectedTeam) {
+                alert("Invalid team selection");
+                return;
+            }
         }
 
         // Convert player data to match schema (replace team name with ID)
         const parsedPlayer = {
             ...newPlayer,
-            teamId: selectedTeam.id,  // Replace name with ID
+            teamId: teams?.find((team) => team.name === newPlayer.teamId)?.id,  
             age: newPlayer.age ? Number(newPlayer.age) : 0,
         };
 

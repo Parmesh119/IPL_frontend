@@ -193,7 +193,7 @@ export function DataTable<TData, TValue>({
                 <div className="flex flex-col sm:flex-row items-center w-full gap-2 sm:gap-4">
                     <Input
                         autoFocus
-                        placeholder="Filter By Names..."
+                        placeholder="Filter By Player Names ..."
                         value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
                         onChange={(event) =>
                             table.getColumn("name")?.setFilterValue(event.target.value)

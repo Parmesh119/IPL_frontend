@@ -25,7 +25,24 @@ export const registerAction = async (data: TRegister): Promise<TLogin> => {
 export const refreshTokenAction = async (data: TRefreshTokenRequest): Promise<TAuthResponse> => {
     const response = await axios.post(`${getBackendUrl()}/api/auth/refresh-token`, data)
     return response.data
-  }
+}
+
+export async function getUserDetails(): Promise<User> {
+    const token = await authService.getAccessToken()
+    if (!token) {
+        toast.error('User is not authenticated')
+        throw new Error('User is not authenticated')
+    }
+
+    const bearerToken = `Bearer ${token}`
+
+    const response = await axios.post(
+        `${getBackendUrl()}/api/auth/get/user`,
+        {},
+        { headers: { Authorization: bearerToken } }
+    )
+    return response.data;
+}
 
 // Player actions
 export async function listPlayersAction(): Promise<Player[]> {
@@ -54,30 +71,12 @@ export async function deletePlayerAction(id: string): Promise<string> {
 }
 
 // Team actions
-export async function getTeamById(id: string): Promise<Team> {
-    const response = await axios.get(`${getBackendUrl()}/api/team/get/${id}`)
-    return response.data;
-}
-
 export async function getAllTeams(): Promise<Team[]> {
     const response = await axios.get(`${getBackendUrl()}/api/team/list`)
     return response.data;
 }
 
-export async function getUserDetails(): Promise<User> {
-    const token = await authService.getAccessToken()
-    if (!token) {
-        toast.error('User is not authenticated')
-        throw new Error('User is not authenticated')
-    }
-
-    const bearerToken = `Bearer ${token}`
-    
-    // Fix: Pass headers as a separate configuration object, not in the request body
-    const response = await axios.post(
-        `${getBackendUrl()}/api/auth/get/user`, 
-        {}, // Empty request body (or add any data you need to send here)
-        { headers: { Authorization: bearerToken } } // Headers as the third parameter
-    )
+export async function getTeamById(id: string): Promise<Team> {
+    const response = await axios.get(`${getBackendUrl()}/api/team/get/${id}`)
     return response.data;
 }

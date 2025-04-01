@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import {
   Breadcrumb,
@@ -17,10 +17,10 @@ import { listPlayersAction, getTeamById } from "@/lib/actions"
 import { LoaderCircle } from 'lucide-react';
 
 export const Route = createFileRoute('/app/players/')({
-  component: RouteComponent,
+  component: PlayerComponent,
 })
 
-async function RouteComponent() {
+async function PlayerComponent() {
   
   const { data: updatedPlayers, isLoading, error } = useQuery<Player[]>({
     queryKey: ['players'],
@@ -60,7 +60,7 @@ async function RouteComponent() {
   }
 
   if (error) {
-    return <div>Error fetching data: {error.message}</div>
+    return <div>Error while fetching data: {error.message}</div>
   }
 
   return (

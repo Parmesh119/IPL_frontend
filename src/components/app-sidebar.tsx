@@ -43,13 +43,8 @@ const items = [
     },
     {
         title: "Teams",
-        url: "/app/teams/",
+        url: "/app/team/",
         icon: Shield,
-    },
-    {
-        title: "Matches",
-        url: "#",
-        icon: Trophy,
     },
     {
         title: "Settings",

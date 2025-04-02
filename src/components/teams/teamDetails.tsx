@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
     Card,
@@ -15,24 +16,71 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useQuery } from '@tanstack/react-query';
 import { getTeamById } from '@/lib/actions';
 import { LoaderCircle } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
-import { Badge } from "../ui/badge";
+import { EditTeamDialog } from './EditTeamDialog';
+import { ChevronDownIcon } from "lucide-react";
 
 export default function TeamDetails({ teamId }: { teamId: string }) {
 
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
     const { theme } = useTheme();
     const { data: team, isLoading, error } = useQuery({
-        queryKey: ['teamDetails'],
+        queryKey: ['teamDetails', teamId],
         queryFn: () => getTeamById(teamId),
+        enabled: !!teamId,
     });
+
+    const handleMakeCaptain = () => {
+        console.log("Make Captain action triggered for team:", teamId);
+        alert("Make Captain: Functionality not yet implemented.");
+    };
+
+    const handleMakeViceCaptain = () => {
+        console.log("Make Vice-Captain action triggered for team:", teamId);
+        alert("Make Vice-Captain: Functionality not yet implemented.");
+    };
+
+    const handleAddPlayer = () => {
+        console.log("Add Player action triggered for team:", teamId);
+        alert("Add Player: Functionality not yet implemented.");
+    };
+
+    const handleRemovePlayer = () => {
+        console.log("Remove Player action triggered for team:", teamId);
+        alert("Remove Player: Functionality not yet implemented.");
+    };
+
+    const handleDeleteTeam = () => {
+        console.log("Delete Team action triggered for team:", teamId);
+        if (window.confirm(`Are you sure you want to delete team ${team?.name || teamId}? This action cannot be undone.`)) {
+            alert("Delete Team: Functionality not yet fully implemented.");
+        }
+    };
+
+    if (!teamId) {
+        return (
+            <div className="flex items-center justify-center h-full w-full p-4 text-muted-foreground">
+                Please select a team to view details.
+            </div>
+        );
+    }
 
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-full w-full p-4">
-                <LoaderCircle className="animate-spin mr-2" /><span>Loading...</span>
+                <LoaderCircle className="animate-spin mr-2 h-5 w-5" />
+                <span>Loading Team Details...</span>
             </div>
         );
     }
@@ -40,71 +88,109 @@ export default function TeamDetails({ teamId }: { teamId: string }) {
     if (error) {
         return (
             <div className="flex items-center justify-center h-full w-full p-4 text-red-500">
-                Error: {error.message}
+                Error loading team details: {error.message}
+            </div>
+        );
+    }
+
+    if (!team) {
+        return (
+            <div className="flex items-center justify-center h-full w-full p-4 text-muted-foreground">
+                Team not found or could not be loaded.
             </div>
         );
     }
 
     const teamData = {
-        name: team?.name,
-        amountSpent: team?.spent,
-        totalPlayers: team?.players,
-        batsmenCount: team?.batsmenCount,
-        bowlersCount: team?.bowlersCount,
-        allRoundersCount: team?.allRoundersCount,
+        name: team?.name ?? 'Unnamed Team',
+        captain: team?.captain ?? 'N/A',
+        amountSpent: team?.spent ?? 0,
+        totalPlayers: team?.players ?? 0,
+        batsmenCount: team?.batsmenCount ?? 0,
+        bowlersCount: team?.bowlersCount ?? 0,
+        allRoundersCount: team?.allRoundersCount ?? 0,
         playersBought: team?.playersBought?.map((player, index) => ({
             srNo: index + 1,
-            player: player.player,
-            iplTeam: player.iplTeam,
-            role: player.role,
-            price: player.price,
+            player: player.player ?? 'Unknown Player',
+            iplTeam: player.iplTeam ?? 'N/A',
+            role: player.role ?? 'Unknown',
+            price: player.price ?? 0,
         })) || [],
     };
 
-    const handleEditDetails = () => {
-        alert(team?.bowlersCount)
-    }
 
     return (
         <>
             <main className="flex-grow overflow-y-auto overflow-x-hidden">
                 <div className="container mx-auto w-full px-2 py-4 sm:px-4 md:px-6 lg:py-6 space-y-4 sm:space-y-6">
                     <div className="flex flex-row justify-between items-start sm:items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
-                        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
+                        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground break-words">
                             Team: {teamData.name}
                         </h1>
-                        <Button
-                            size="sm"
-                            onClick={handleEditDetails}
-                            variant="outline"
-                            className={`cursor-pointer border sm:self-auto ${theme === "dark" ? "border-white" : "border-black"}`}
-                        >
-                            Edit
-                        </Button>
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className={`cursor-pointer border sm:self-auto ${theme === "dark" ? "border-white/50" : "border-black/50"} hover:bg-muted`}
+                                >
+                                    
+                                    Actions
+                                    <ChevronDownIcon />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="cursor-pointer mt-2">
+                                <DropdownMenuLabel className="hover:bg-gray-600 hover:rounded-sm" onClick={() => setIsDialogOpen(true)}>Update Team</DropdownMenuLabel>
+                                <EditTeamDialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)} team={team} />
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={handleMakeCaptain} className="cursor-pointer">
+                                    Make Captain
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={handleMakeViceCaptain} className="cursor-pointer">
+                                    Make Vice-Captain
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={handleAddPlayer} className="cursor-pointer">
+                                    Add Player
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={handleRemovePlayer} className="cursor-pointer">
+                                    Remove Player
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    onClick={handleDeleteTeam}
+                                    className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-100 dark:focus:bg-red-900/50"
+                                >
+                                    Delete Team
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
                         <div>
-                            <Label htmlFor="teamName" className="text-sm font-medium text-muted-foreground">Name</Label>
-                            <Input id="teamName" value={teamData.name} readOnly className="mt-1" />
+                            <Label htmlFor="captain" className="text-sm font-medium text-muted-foreground">Captain</Label>
+                            <Input id="captain" value={teamData.captain || "No Captain Assigned"} readOnly className="mt-1" />
                         </div>
                         <div>
                             <Label htmlFor="amountSpent" className="text-sm font-medium text-muted-foreground">Amount Spent</Label>
-                            <Input id="amountSpent" value={teamData.amountSpent} readOnly className="mt-1" />
+                            <Input id="amountSpent" type="number" value={teamData.amountSpent} readOnly className="mt-1" />
                         </div>
                         <div>
                             <Label htmlFor="totalPlayers" className="text-sm font-medium text-muted-foreground">Total Players</Label>
-                            <Input id="totalPlayers" value={teamData.totalPlayers} readOnly className="mt-1" />
+                            <Input id="totalPlayers" type="number" value={teamData.totalPlayers} readOnly className="mt-1" />
                         </div>
                     </div>
 
                     <h2 className="text-lg sm:text-xl font-semibold tracking-tight mb-3 sm:mb-4 text-foreground">
-                        Players Bought
+                        Player Role Counts
                     </h2>
                     <div className="text-md grid w-full grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-10 text-center">
-                        <Card className="w-full ">
+                        <Card className="w-full">
                             <CardHeader className="pb-2 pt-3 px-3 sm:pt-4 sm:px-4">
-                                <CardTitle className=" font-medium text-muted-foreground">Batsmen</CardTitle>
+                                <CardTitle className=" font-medium text-muted-foreground text-sm sm:text-base">Total Batsmen</CardTitle>
                             </CardHeader>
                             <CardContent className="pb-3 px-3 sm:pb-4 sm:px-4">
                                 <div className="text-xl sm:text-2xl font-bold text-foreground">{teamData.batsmenCount}</div>
@@ -112,7 +198,7 @@ export default function TeamDetails({ teamId }: { teamId: string }) {
                         </Card>
                         <Card className="w-full">
                             <CardHeader className="pb-2 pt-3 px-3 sm:pt-4 sm:px-4">
-                                <CardTitle className="font-medium text-muted-foreground">Bowlers</CardTitle>
+                                <CardTitle className="font-medium text-muted-foreground text-sm sm:text-base">Total Bowlers</CardTitle>
                             </CardHeader>
                             <CardContent className="pb-3 px-3 sm:pb-4 sm:px-4">
                                 <div className="text-xl sm:text-2xl font-bold text-foreground">{teamData.bowlersCount}</div>
@@ -120,59 +206,45 @@ export default function TeamDetails({ teamId }: { teamId: string }) {
                         </Card>
                         <Card className="w-full">
                             <CardHeader className="pb-2 pt-3 px-3 sm:pt-4 sm:px-4">
-                                <CardTitle className="font-medium text-muted-foreground">All Rounders</CardTitle>
+                                <CardTitle className="font-medium text-muted-foreground text-sm sm:text-base">Total All-Rounders</CardTitle>
                             </CardHeader>
                             <CardContent className="pb-3 px-3 sm:pb-4 sm:px-4">
                                 <div className="text-xl sm:text-2xl font-bold text-foreground">{teamData.allRoundersCount}</div>
                             </CardContent>
                         </Card>
                     </div>
-                    <hr className="opacity-30" />
-                    <Card className="mt-6 sm:mt-10 w-full">
-                        <CardContent className="p-2 sm:p-4">
+
+                    <h2 className="text-lg sm:text-xl font-semibold tracking-tight mb-3 sm:mb-4 text-foreground">
+                        Players Bought
+                    </h2>
+                    <Card className="mt-0 sm:mt-0 w-full px-0 lg:px-10">
+                        <CardContent className="sm:p-0">
                             <div className="overflow-x-auto">
                                 <Table>
                                     <TableHeader>
                                         <TableRow className="border-b dark:border-neutral-800 hover:bg-transparent">
-                                            <TableHead className="w-80 text-muted-foreground text-xs sm:text-sm">Sr. No.</TableHead>
-                                            <TableHead className="text-muted-foreground text-xs sm:text-sm">Player</TableHead>
-                                            <TableHead className="text-muted-foreground text-xs sm:text-sm">IPL Team</TableHead>
-                                            <TableHead className="text-muted-foreground text-xs sm:text-sm">Role</TableHead>
-                                            <TableHead className="text-right text-muted-foreground text-xs sm:text-sm">Price</TableHead>
+                                            <TableHead className="w-[300px] md:w-[150px] px-2 sm:px-4 text-muted-foreground text-xs sm:text-sm">Sr.</TableHead>
+                                            <TableHead className="px-1 sm:px-2 text-muted-foreground text-xs sm:text-sm">Player</TableHead>
+                                            <TableHead className="px-1 sm:px-2 text-muted-foreground text-xs sm:text-sm">IPL Team</TableHead>
+                                            <TableHead className="px-2 sm:px-2 text-muted-foreground text-xs sm:text-sm">Role</TableHead>
+                                            <TableHead className="text-right px-2 sm:px-4 text-muted-foreground text-xs sm:text-sm">Price</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {teamData.playersBought.length > 0 ? (
-                                            (teamData.playersBought || []).map((player) => (
+                                            teamData.playersBought.map((player) => (
                                                 <TableRow key={player.srNo} className="border-b dark:border-neutral-800/50 hover:bg-muted/20">
-                                                    <TableCell className="py-1 px-2 sm:py-2 sm:px-4 font-medium text-xs sm:text-sm">{player.srNo}</TableCell>
+                                                    <TableCell className="py-2 px-2 sm:py-2 sm:px-4 font-medium text-xs sm:text-sm">{player.srNo}</TableCell>
                                                     <TableCell className="py-1 px-1 sm:py-2 sm:px-2 text-xs sm:text-sm">{player.player}</TableCell>
                                                     <TableCell className="py-1 px-1 sm:py-2 sm:px-2 text-xs sm:text-sm">{player.iplTeam}</TableCell>
                                                     <TableCell className="py-1 px-2 sm:py-2 sm:px-2 text-xs sm:text-sm">
-                                                        {player.role === "Batsman" && (
-                                                            <span className={`inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium tracking-widest ${theme === "dark" ? "bg-blue-900/70 text-blue-100" : "bg-blue-100 text-blue-800"
-                                                                }`}>
-                                                                {player.role}
-                                                            </span>
-                                                        )}
-                                                        {player.role === "Bowler" && (
-                                                            <span className={`inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium tracking-widest ${theme === "dark" ? "bg-green-900/70 text-green-100" : "bg-green-100 text-green-800"
-                                                                }`}>
-                                                                {player.role}
-                                                            </span>
-                                                        )}
-                                                        {player.role === "All-rounder" && (
-                                                            <span className={`inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium tracking-widest ${theme === "dark" ? "bg-purple-900/70 text-purple-100" : "bg-purple-100 text-purple-800"
-                                                                }`}>
-                                                                {player.role}
-                                                            </span>
-                                                        )}
-                                                        {!player.role && (
-                                                            <span className={`inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium tracking-wider ${theme === "dark" ? "bg-gray-800 text-gray-300" : "bg-gray-100 text-gray-800"
-                                                                }`}>
-                                                                Unknown
-                                                            </span>
-                                                        )}
+                                                        <span className={`inline-flex items-center rounded-md px-2 py-1 sm:px-2.5 sm:py-1.5 text-[10px] sm:text-xs font-medium tracking-wider ${player.role === "Batsman" ? (theme === "dark" ? "bg-blue-900/70 text-blue-100" : "bg-blue-100 text-blue-800") :
+                                                                player.role === "Bowler" ? (theme === "dark" ? "bg-green-900/70 text-green-100" : "bg-green-100 text-green-800") :
+                                                                    player.role === "All-rounder" ? (theme === "dark" ? "bg-purple-900/70 text-purple-100" : "bg-purple-100 text-purple-800") :
+                                                                        (theme === "dark" ? "bg-gray-800 text-gray-300" : "bg-gray-100 text-gray-800")
+                                                            }`}>
+                                                            {player.role}
+                                                        </span>
                                                     </TableCell>
                                                     <TableCell className="py-1 px-2 sm:py-2 sm:px-4 text-right text-xs sm:text-sm">{player.price}</TableCell>
                                                 </TableRow>

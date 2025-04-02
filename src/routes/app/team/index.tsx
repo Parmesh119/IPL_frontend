@@ -62,7 +62,7 @@ async function TeamComponent() {
         </div>
       </header>
       <Separator className="mb-4" />
-      <div className="container mx-auto py-2">
+      <div className="container mx-auto py-2 px-2">
         {teams && teams.length > 0 ? (
           <DataTable columns={columns} data={teams ?? []} />
         ) : (

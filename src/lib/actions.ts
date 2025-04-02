@@ -80,3 +80,13 @@ export async function getTeamById(id: string): Promise<TeamDTO> {
     const response = await axios.get(`${getBackendUrl()}/api/team/get/${id}`)
     return response.data;
 }
+
+export async function addTeamAction(team: Team): Promise<Team> {
+    const response = await axios.post(`${getBackendUrl()}/api/team/create`, team)
+    return response.data;
+}
+
+export async function updateTeamAction(team: Team): Promise<Team> {
+    const response = await axios.post(`${getBackendUrl()}/api/team/update`, team)
+    return response.data;
+}

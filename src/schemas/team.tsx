@@ -5,8 +5,8 @@ export const TeamSchema = z.object({
   name: z.string().min(1, { message: "Team name is required" }),
   owner: z.string().min(1, { message: "Owner's name is required" }),
   coach: z.string().min(1, { message: "Coach's name is required" }),
-  captain: z.string().min(1, { message: "Captain's name is required" }),
-  viceCaptain: z.string().min(1, { message: "Vice-captain's name is required" }),
+  captain: z.string().optional(),
+  viceCaptain: z.string().optional(),
   spent: z.number().optional(),
   players: z.number().optional()
 });
@@ -19,8 +19,6 @@ const PlayerDTOSchema = z.object({
   price: z.number().default(0.0)
 });
 
-// Type inference
-type PlayerDTO = z.infer<typeof PlayerDTOSchema>;
 
 export const TeamDTOSchema = z.object({
   id: z.string().optional(),

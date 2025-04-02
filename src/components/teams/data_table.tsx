@@ -24,8 +24,8 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-
-import { useTheme } from "../theme-provider"
+import { AddTeamDialog } from "./AddTeamDialog"
+import { useTheme } from "@/components/theme-provider"
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -37,9 +37,10 @@ export function DataTable<TData, TValue>({
     data,
 }: DataTableProps<TData, TValue>) {
 
-    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
-        []
-    )
+    const { theme } = useTheme()
+
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const table = useReactTable({
         data,
@@ -53,11 +54,9 @@ export function DataTable<TData, TValue>({
         }
     })
 
-    const { theme } = useTheme()
-
     return (
-        <div>
-            <div className="flex items-center py-4 tracking-wider justify-between">
+        <div className="w-full px-2 sm:px-4">
+            <div className="flex flex-col sm:flex-row items-center py-4 tracking-wider justify-between gap-4">
                 <Input
                     placeholder="Filter By Team Name ..."
                     value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
@@ -65,27 +64,33 @@ export function DataTable<TData, TValue>({
                     onChange={(event) =>
                         table.getColumn("name")?.setFilterValue(event.target.value)
                     }
-                    className="max-w-sm"
+                    className="w-full sm:max-w-sm"
                 />
-                <Button variant={theme === "dark" ? "outline" : undefined} className={`border cursor-pointer ${theme === "dark" ? "border-white" : " bg-blue-500 hover:bg-white hover:text-black"}`}>Add Team</Button>
+                <Button
+                    onClick={() => setIsDialogOpen(true)}
+                    className={`border cursor-pointer ${theme === "dark" ? "border-white" : "bg-blue-500 hover:bg-white hover:text-black"}`}
+                >
+                    Add Team
+                </Button>
             </div>
-            <div className="rounded-md border tracking-wider mt-4">
-                <Table>
+            <AddTeamDialog isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)} />
+            
+            {/* Responsive Table */}
+            <div className="rounded-md border tracking-wider mt-4 overflow-x-auto">
+                <Table className="min-w-full">
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => {
-                                    return (
-                                        <TableHead key={header.id}>
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                    header.column.columnDef.header,
-                                                    header.getContext()
-                                                )}
-                                        </TableHead>
-                                    )
-                                })}
+                            <TableRow key={headerGroup.id} className="bg-gray-100 dark:bg-gray-800">
+                                {headerGroup.headers.map((header) => (
+                                    <TableHead
+                                        key={header.id}
+                                        className="px-4 py-2 text-left text-xs sm:text-sm md:text-base"
+                                    >
+                                        {header.isPlaceholder
+                                            ? null
+                                            : flexRender(header.column.columnDef.header, header.getContext())}
+                                    </TableHead>
+                                ))}
                             </TableRow>
                         ))}
                     </TableHeader>
@@ -95,24 +100,28 @@ export function DataTable<TData, TValue>({
                                 <TableRow
                                     key={row.id}
                                     data-state={row.getIsSelected() && "selected"}
-                                    className="cursor-pointer relative"
+                                    className="cursor-pointer relative hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                                 >
                                     {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
+                                        <TableCell
+                                            key={cell.id}
+                                            className="px-2 py-2 text-xs sm:text-sm md:text-base"
+                                        >
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </TableCell>
                                     ))}
                                     <Link
-                                        to="/app/team/$teamId"
-                                        key={row.id}
-                                        params={{ teamId: row.original?.id }}
+                                        to={`/app/team/${row.original?.id as string}`}
                                         className="absolute inset-0"
                                     ></Link>
                                 </TableRow>
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center">
+                                <TableCell
+                                    colSpan={columns.length}
+                                    className="h-24 text-center text-xs sm:text-sm md:text-base"
+                                >
                                     No results.
                                 </TableCell>
                             </TableRow>
@@ -120,23 +129,32 @@ export function DataTable<TData, TValue>({
                     </TableBody>
                 </Table>
             </div>
-            <div className="flex items-center justify-end space-x-2 py-4">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => table.previousPage()}
-                    disabled={!table.getCanPreviousPage()}
-                >
-                    Previous
-                </Button>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => table.nextPage()}
-                    disabled={!table.getCanNextPage()}
-                >
-                    Next
-                </Button>
+
+            {/* Pagination Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 sm:space-x-2 py-4">
+                <span className="text-xs sm:text-sm">
+                    Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                </span>
+                <div className="flex space-x-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="cursor-pointer"
+                        onClick={() => table.previousPage()}
+                        disabled={!table.getCanPreviousPage()}
+                    >
+                        Previous
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="cursor-pointer"
+                        onClick={() => table.nextPage()}
+                        disabled={!table.getCanNextPage()}
+                    >
+                        Next
+                    </Button>
+                </div>
             </div>
         </div>
     )

@@ -64,7 +64,7 @@ async function PlayerComponent() {
   }
 
   return (
-    <SidebarInset className="w-full">
+    <SidebarInset className="w-full lg:m-2 sm:m-6">
       <header className="flex h-16 shrink-0 items-center gap-2">
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
@@ -83,7 +83,7 @@ async function PlayerComponent() {
         </div>
       </header>
       <Separator className="mb-4" />
-      <div className="container mx-auto py-2">
+      <div className="container mx-auto py-2 px-2">
         {updatedPlayers && updatedPlayers.length > 0 ? (
           <DataTable columns={columns} data={updatedPlayers ?? []} />
         ) : (

@@ -51,10 +51,9 @@ function LoginComponent() {
 
       await authService.setTokens(data)
 
-
       toast.success('Login Successful', {
         description: (
-          <span className="text-black">
+          <span className="text-black dark:text-white">
             Welcome back! Redirecting to dashboard...
           </span>
         ),
@@ -86,15 +85,15 @@ function LoginComponent() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-gray-100 to-gray-300 dark:from-gray-900 dark:to-gray-800">
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg border border-gray-300"
+        className="w-full max-w-md p-8 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-300 dark:border-gray-700"
       >
-        <h1 className="mb-6 text-3xl font-bold text-center text-gray-800">
+        <h1 className="mb-6 text-3xl font-bold text-center text-gray-800 dark:text-white">
           Welcome Back
         </h1>
-        <p className="mb-6 text-sm text-center text-gray-600">
+        <p className="mb-6 text-sm text-center text-gray-600 dark:text-gray-400">
           Please login to your account
         </p>
 
@@ -102,7 +101,7 @@ function LoginComponent() {
         <div className="mb-4">
           <label
             htmlFor="username"
-            className="block mb-2 text-sm font-medium text-gray-700"
+            className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             Username
           </label>
@@ -111,9 +110,9 @@ function LoginComponent() {
             type="text"
             autoFocus
             {...register('username')}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${errors.username
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 ${errors.username
               ? 'border-red-500 focus:ring-red-500'
-              : 'focus:ring-blue-500'
+              : 'focus:ring-blue-500 dark:focus:ring-blue-400'
               }`}
             placeholder="Enter your username"
           />
@@ -126,7 +125,7 @@ function LoginComponent() {
         <div className="mb-6 relative">
           <label
             htmlFor="password"
-            className="block mb-2 text-sm font-medium text-gray-700"
+            className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             Password
           </label>
@@ -134,15 +133,15 @@ function LoginComponent() {
             id="password"
             type={showPassword ? 'text' : 'password'}
             {...register('password')}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${errors.password
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 ${errors.password
               ? 'border-red-500 focus:ring-red-500'
-              : 'focus:ring-blue-500'
+              : 'focus:ring-blue-500 dark:focus:ring-blue-400'
               }`}
             placeholder="Enter your password"
           />
           <button
             type="button"
-            className="absolute right-3 top-12 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            className="absolute right-3 top-12 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             onClick={togglePasswordVisibility}
           >
             {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -155,18 +154,18 @@ function LoginComponent() {
         {/* Submit Button */}
         <Button
           type="submit"
-          className="w-full cursor-pointer py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full cursor-pointer py-2 text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
         >
           Login
         </Button>
 
         {/* Register Link */}
         <div className="mt-4 text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             Don't have an account?{' '}
             <Link
               to="/auth/register"
-              className="text-blue-600 hover:underline"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
             >
               Register
             </Link>
@@ -176,3 +175,5 @@ function LoginComponent() {
     </div>
   )
 }
+
+export default LoginComponent

@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { type TLogin, type TAuthResponse, type TRegister, type TRefreshTokenRequest } from '@/schemas/auth-schema'
 import { type Player } from '@/schemas/players'
-import { type Team } from '@/schemas/team'
+import { type Team, type TeamDTO } from '@/schemas/team'
 import { type User } from '@/schemas/users'
 import { authService } from '@/lib/auth'
 import { toast } from 'sonner'
@@ -76,7 +76,7 @@ export async function getAllTeams(): Promise<Team[]> {
     return response.data;
 }
 
-export async function getTeamById(id: string): Promise<Team> {
+export async function getTeamById(id: string): Promise<TeamDTO> {
     const response = await axios.get(`${getBackendUrl()}/api/team/get/${id}`)
     return response.data;
 }

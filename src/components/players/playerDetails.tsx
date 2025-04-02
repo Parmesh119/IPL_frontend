@@ -46,7 +46,7 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({
       <Card className={`${theme === "dark" ? "border border-white bg-gray-800" : "bg-white border border-black"} shadow-md p-10`}>
         <CardContent>
           <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold">User Information</h2>
+            <h2 className="text-2xl font-semibold">Player Information</h2>
             <Button 
               className={`${theme !== "dark" ? " bg-black text-white" : "text-black bg-white"} text-md cursor-pointer`}
               onClick={() => {

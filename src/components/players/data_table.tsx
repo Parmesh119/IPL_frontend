@@ -135,6 +135,11 @@ export function DataTable<TData, TValue>({
             alert(errorMessages);
             return;
         }
+
+        if(parsedPlayer.role === "Bowler" && !parsedPlayer.bowlingStyle) {
+            toast.error("Bowling style is required for Bowlers");
+            return;
+        }
         addPlayer(parsedPlayer);
         setOpen(false);
     };
@@ -189,7 +194,7 @@ export function DataTable<TData, TValue>({
 
     return (
         <div className="tracking-wider">
-            <div className="flex flex-col md:flex-row items-center justify-between py-4 gap-2 md:gap-0">
+            <div className="flex flex-col md:flex-row items-center py-4 gap-2 md:gap-0">
                 <div className="flex flex-col sm:flex-row items-center w-full gap-2 sm:gap-4">
                     <Input
                         autoFocus
@@ -239,7 +244,7 @@ export function DataTable<TData, TValue>({
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
-                <span className="border border-white rounded-md "><AddPlayerDialog
+                <span className="border border-white rounded-md w-full lg:w-30"><AddPlayerDialog
                     open={open}
                     setOpen={setOpen}
                     newPlayer={newPlayer}

@@ -15,6 +15,7 @@ import { useMutation } from "@tanstack/react-query";
 import { addTeamAction } from "@/lib/actions";
 import { toast } from "sonner";
 import { useTheme } from "../theme-provider";
+import { useRouter } from "@tanstack/react-router";
 
 interface AddTeamDialogProps {
     isOpen: boolean;
@@ -22,6 +23,8 @@ interface AddTeamDialogProps {
 }
 
 export function AddTeamDialog({ isOpen, onClose }: AddTeamDialogProps) {
+
+    const router = useRouter();
     const {
         register,
         handleSubmit,
@@ -29,12 +32,12 @@ export function AddTeamDialog({ isOpen, onClose }: AddTeamDialogProps) {
     } = useForm<Team>({
         resolver: zodResolver(TeamSchema),
     });
-    
+
     const { mutate: addTeam } = useMutation({
         mutationFn: (data: Team) => addTeamAction(data),
         onSuccess: () => {
             toast.success("Team added successfully");
-            window.location.href = "/app/team";
+            router.navigate({ to: "/app/team" })
             onClose();
         },
         onError: (error: any) => {
@@ -42,7 +45,7 @@ export function AddTeamDialog({ isOpen, onClose }: AddTeamDialogProps) {
             console.error("Error adding team:", error);
         },
     });
-    
+
     const { theme } = useTheme();
 
     return (

@@ -90,3 +90,8 @@ export async function updateTeamAction(team: Team): Promise<Team> {
     const response = await axios.post(`${getBackendUrl()}/api/team/update`, team)
     return response.data;
 }
+
+export async function deleteTeamAction(id: string): Promise<string> {
+    const response = await axios.delete(`${getBackendUrl()}/api/team/delete/${id}`)
+    return response.data;
+}

@@ -24,16 +24,34 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { useQuery } from '@tanstack/react-query';
 import { getTeamById } from '@/lib/actions';
 import { LoaderCircle } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
 import { EditTeamDialog } from './EditTeamDialog';
 import { ChevronDownIcon } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { deleteTeamAction } from "@/lib/actions";
+import { toast } from "sonner";
+import { useRouter } from "@tanstack/react-router";
 
 export default function TeamDetails({ teamId }: { teamId: string }) {
 
+    const router = useRouter();
+
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
     const { theme } = useTheme();
     const { data: team, isLoading, error } = useQuery({
         queryKey: ['teamDetails', teamId],
@@ -61,12 +79,17 @@ export default function TeamDetails({ teamId }: { teamId: string }) {
         alert("Remove Player: Functionality not yet implemented.");
     };
 
-    const handleDeleteTeam = () => {
-        console.log("Delete Team action triggered for team:", teamId);
-        if (window.confirm(`Are you sure you want to delete team ${team?.name || teamId}? This action cannot be undone.`)) {
-            alert("Delete Team: Functionality not yet fully implemented.");
-        }
-    };
+
+    const { mutate: deleteTeam } = useMutation({
+        mutationFn: () => deleteTeamAction(teamId),
+        onSuccess: () => {
+            toast.success("Team deleted successfully");
+            router.navigate({ to: "/app/team" });
+        },
+        onError: () => {
+            toast.error("Error while deleting team!!");
+        },
+    });
 
     if (!teamId) {
         return (
@@ -135,7 +158,6 @@ export default function TeamDetails({ teamId }: { teamId: string }) {
                                     size="sm"
                                     className={`cursor-pointer border sm:self-auto ${theme === "dark" ? "border-white/50" : "border-black/50"} hover:bg-muted`}
                                 >
-                                    
                                     Actions
                                     <ChevronDownIcon />
                                 </Button>
@@ -159,13 +181,31 @@ export default function TeamDetails({ teamId }: { teamId: string }) {
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                    onClick={handleDeleteTeam}
                                     className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-100 dark:focus:bg-red-900/50"
+                                    onClick={() => setIsAlertOpen(true)} // Open alert manually
                                 >
                                     Delete Team
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
+
+                        {/* Move AlertDialog outside to prevent closing issue */}
+                        <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+                            <AlertDialogContent className="sm:max-w-[700px] tracking-wider border">
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete entire team details from the database.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
+                                    <AlertDialogAction className="cursor-pointer" onClick={() => deleteTeam()}>
+                                        Delete
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
 
                     </div>
 
@@ -239,9 +279,9 @@ export default function TeamDetails({ teamId }: { teamId: string }) {
                                                     <TableCell className="py-1 px-1 sm:py-2 sm:px-2 text-xs sm:text-sm">{player.iplTeam}</TableCell>
                                                     <TableCell className="py-1 px-2 sm:py-2 sm:px-2 text-xs sm:text-sm">
                                                         <span className={`inline-flex items-center rounded-md px-2 py-1 sm:px-2.5 sm:py-1.5 text-[10px] sm:text-xs font-medium tracking-wider ${player.role === "Batsman" ? (theme === "dark" ? "bg-blue-900/70 text-blue-100" : "bg-blue-100 text-blue-800") :
-                                                                player.role === "Bowler" ? (theme === "dark" ? "bg-green-900/70 text-green-100" : "bg-green-100 text-green-800") :
-                                                                    player.role === "All-rounder" ? (theme === "dark" ? "bg-purple-900/70 text-purple-100" : "bg-purple-100 text-purple-800") :
-                                                                        (theme === "dark" ? "bg-gray-800 text-gray-300" : "bg-gray-100 text-gray-800")
+                                                            player.role === "Bowler" ? (theme === "dark" ? "bg-green-900/70 text-green-100" : "bg-green-100 text-green-800") :
+                                                                player.role === "All-rounder" ? (theme === "dark" ? "bg-purple-900/70 text-purple-100" : "bg-purple-100 text-purple-800") :
+                                                                    (theme === "dark" ? "bg-gray-800 text-gray-300" : "bg-gray-100 text-gray-800")
                                                             }`}>
                                                             {player.role}
                                                         </span>

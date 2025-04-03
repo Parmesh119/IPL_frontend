@@ -15,6 +15,7 @@ import { useMutation } from "@tanstack/react-query";
 import { updateTeamAction } from "@/lib/actions"; // Replace with your API call
 import { toast } from "sonner";
 import { useTheme } from "../theme-provider";
+import { useRouter } from "@tanstack/react-router";
 
 interface EditTeamDialogProps {
     open: boolean;
@@ -23,6 +24,8 @@ interface EditTeamDialogProps {
 }
 
 export function EditTeamDialog({ open, onClose, team }: EditTeamDialogProps) {
+
+    const router = useRouter();
     const {
         register,
         handleSubmit,
@@ -39,7 +42,7 @@ export function EditTeamDialog({ open, onClose, team }: EditTeamDialogProps) {
         },
         onSuccess: () => {
             toast.success("Team updated successfully");
-            window.location.href = `/app/team/${team.id}`; // Redirect to the team page
+            window.location.href = `/app/team/${team.id}`
             onClose();
         },
         onError: (error: any) => {

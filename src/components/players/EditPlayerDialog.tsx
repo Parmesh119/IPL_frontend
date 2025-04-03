@@ -31,7 +31,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updatePlayerAction } from "@/lib/actions";
 import { toast } from "sonner";
 import { type Team } from "@/schemas/team"; // Adjust path
-
+import { useRouter, Navigate } from "@tanstack/react-router";
 
 interface EditPlayerDialogProps {
     open: boolean;
@@ -64,6 +64,7 @@ const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
 
     const queryClient = useQueryClient();
     const { theme } = useTheme();
+    const router = useRouter()
     let prefetchTeams: Team[] | undefined = queryClient.getQueryData(["teams"]) as any[] || [];;
 
 
@@ -74,7 +75,7 @@ const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
         },
         onSuccess: () => {
             toast.success("Player updated successfully");
-            window.location.href = `/app/players/${editPlayer?.id}`;
+            window.location.href = `/app/players/${id}`;
             setOpen(false);
         },
         onError: (error) => {
@@ -133,12 +134,12 @@ const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
     });
 
     const handleDeletePlayer = () => {
-        if(editPlayer.teamId != null) {
+        if (editPlayer.teamId != null) {
             toast.error("Player is part of a team. Please remove the player from the team before deleting.");
             handleCancelEdit()
             return;
         }
-        window.location.href = `/app/players`;
+        router.navigate({ to: `/app/players` })
         deleteMutation.mutate(id);
     };
 
@@ -248,7 +249,7 @@ const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
                 <DialogFooter className="flex sm:w-full justify-between">
                     <AlertDialog >
                         <AlertDialogTrigger asChild>
-                            <Button variant="destructive"  className="cursor-pointer mr-28 w-full lg:w-30 md:w-30">Delete Player</Button>
+                            <Button variant="destructive" className="cursor-pointer mr-28 w-full lg:w-30 md:w-30">Delete Player</Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent className="sm:max-w-[700px] tracking-wider border" >
                             <AlertDialogHeader>

@@ -229,7 +229,7 @@ export function DataTable<TData extends { id: string }, TValue>({
     return (
         <div className="w-full px-2 sm:px-4 tracking-wider">
             <div className="flex flex-col sm:flex-row items-center py-4 justify-between gap-4">
-                <div className="flex flex-row sm:flex-col items-center w-full sm:w-auto gap-4 sm:gap-4 cursor-pointer">
+                <div className="flex flex-col sm:flex-row items-center w-full sm:w-auto gap-4 sm:gap-4 cursor-pointer">
                     <Input
                         autoFocus
                         placeholder="Filter By Player Names ..."
@@ -261,7 +261,7 @@ export function DataTable<TData extends { id: string }, TValue>({
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="border-input bg-background hover:bg-accent hover:text-accent-foreground w-full sm:w-auto">
+                            <Button variant="outline" className="cursor-pointer border-input bg-background hover:bg-accent hover:text-accent-foreground w-full sm:w-auto">
                                 <Plus className="h-4 w-4 mr-2" /> Status
                             </Button>
                         </DropdownMenuTrigger>

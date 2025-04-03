@@ -18,8 +18,10 @@ import { Route as AuthLoginImport } from './routes/auth/login'
 import { Route as AppTeamIndexImport } from './routes/app/team/index'
 import { Route as AppPlayersIndexImport } from './routes/app/players/index'
 import { Route as AppDashboardIndexImport } from './routes/app/dashboard/index'
+import { Route as AppAuctionIndexImport } from './routes/app/auction/index'
 import { Route as AppTeamTeamIdImport } from './routes/app/team/$teamId'
 import { Route as AppPlayersPlayerIdImport } from './routes/app/players/$playerId'
+import { Route as AppAuctionPlayersGetImport } from './routes/app/auction/players/get'
 
 // Create/Update Routes
 
@@ -65,6 +67,12 @@ const AppDashboardIndexRoute = AppDashboardIndexImport.update({
   getParentRoute: () => AppRouteRoute,
 } as any)
 
+const AppAuctionIndexRoute = AppAuctionIndexImport.update({
+  id: '/auction/',
+  path: '/auction/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+
 const AppTeamTeamIdRoute = AppTeamTeamIdImport.update({
   id: '/team/$teamId',
   path: '/team/$teamId',
@@ -74,6 +82,12 @@ const AppTeamTeamIdRoute = AppTeamTeamIdImport.update({
 const AppPlayersPlayerIdRoute = AppPlayersPlayerIdImport.update({
   id: '/players/$playerId',
   path: '/players/$playerId',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+
+const AppAuctionPlayersGetRoute = AppAuctionPlayersGetImport.update({
+  id: '/auction/players/get',
+  path: '/auction/players/get',
   getParentRoute: () => AppRouteRoute,
 } as any)
 
@@ -123,6 +137,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTeamTeamIdImport
       parentRoute: typeof AppRouteImport
     }
+    '/app/auction/': {
+      id: '/app/auction/'
+      path: '/auction'
+      fullPath: '/app/auction'
+      preLoaderRoute: typeof AppAuctionIndexImport
+      parentRoute: typeof AppRouteImport
+    }
     '/app/dashboard/': {
       id: '/app/dashboard/'
       path: '/dashboard'
@@ -144,6 +165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTeamIndexImport
       parentRoute: typeof AppRouteImport
     }
+    '/app/auction/players/get': {
+      id: '/app/auction/players/get'
+      path: '/auction/players/get'
+      fullPath: '/app/auction/players/get'
+      preLoaderRoute: typeof AppAuctionPlayersGetImport
+      parentRoute: typeof AppRouteImport
+    }
   }
 }
 
@@ -152,17 +180,21 @@ declare module '@tanstack/react-router' {
 interface AppRouteRouteChildren {
   AppPlayersPlayerIdRoute: typeof AppPlayersPlayerIdRoute
   AppTeamTeamIdRoute: typeof AppTeamTeamIdRoute
+  AppAuctionIndexRoute: typeof AppAuctionIndexRoute
   AppDashboardIndexRoute: typeof AppDashboardIndexRoute
   AppPlayersIndexRoute: typeof AppPlayersIndexRoute
   AppTeamIndexRoute: typeof AppTeamIndexRoute
+  AppAuctionPlayersGetRoute: typeof AppAuctionPlayersGetRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppPlayersPlayerIdRoute: AppPlayersPlayerIdRoute,
   AppTeamTeamIdRoute: AppTeamTeamIdRoute,
+  AppAuctionIndexRoute: AppAuctionIndexRoute,
   AppDashboardIndexRoute: AppDashboardIndexRoute,
   AppPlayersIndexRoute: AppPlayersIndexRoute,
   AppTeamIndexRoute: AppTeamIndexRoute,
+  AppAuctionPlayersGetRoute: AppAuctionPlayersGetRoute,
 }
 
 const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
@@ -176,9 +208,11 @@ export interface FileRoutesByFullPath {
   '/auth/register': typeof AuthRegisterRoute
   '/app/players/$playerId': typeof AppPlayersPlayerIdRoute
   '/app/team/$teamId': typeof AppTeamTeamIdRoute
+  '/app/auction': typeof AppAuctionIndexRoute
   '/app/dashboard': typeof AppDashboardIndexRoute
   '/app/players': typeof AppPlayersIndexRoute
   '/app/team': typeof AppTeamIndexRoute
+  '/app/auction/players/get': typeof AppAuctionPlayersGetRoute
 }
 
 export interface FileRoutesByTo {
@@ -188,9 +222,11 @@ export interface FileRoutesByTo {
   '/auth/register': typeof AuthRegisterRoute
   '/app/players/$playerId': typeof AppPlayersPlayerIdRoute
   '/app/team/$teamId': typeof AppTeamTeamIdRoute
+  '/app/auction': typeof AppAuctionIndexRoute
   '/app/dashboard': typeof AppDashboardIndexRoute
   '/app/players': typeof AppPlayersIndexRoute
   '/app/team': typeof AppTeamIndexRoute
+  '/app/auction/players/get': typeof AppAuctionPlayersGetRoute
 }
 
 export interface FileRoutesById {
@@ -201,9 +237,11 @@ export interface FileRoutesById {
   '/auth/register': typeof AuthRegisterRoute
   '/app/players/$playerId': typeof AppPlayersPlayerIdRoute
   '/app/team/$teamId': typeof AppTeamTeamIdRoute
+  '/app/auction/': typeof AppAuctionIndexRoute
   '/app/dashboard/': typeof AppDashboardIndexRoute
   '/app/players/': typeof AppPlayersIndexRoute
   '/app/team/': typeof AppTeamIndexRoute
+  '/app/auction/players/get': typeof AppAuctionPlayersGetRoute
 }
 
 export interface FileRouteTypes {
@@ -215,9 +253,11 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/app/players/$playerId'
     | '/app/team/$teamId'
+    | '/app/auction'
     | '/app/dashboard'
     | '/app/players'
     | '/app/team'
+    | '/app/auction/players/get'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -226,9 +266,11 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/app/players/$playerId'
     | '/app/team/$teamId'
+    | '/app/auction'
     | '/app/dashboard'
     | '/app/players'
     | '/app/team'
+    | '/app/auction/players/get'
   id:
     | '__root__'
     | '/'
@@ -237,9 +279,11 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/app/players/$playerId'
     | '/app/team/$teamId'
+    | '/app/auction/'
     | '/app/dashboard/'
     | '/app/players/'
     | '/app/team/'
+    | '/app/auction/players/get'
   fileRoutesById: FileRoutesById
 }
 
@@ -281,9 +325,11 @@ export const routeTree = rootRoute
       "children": [
         "/app/players/$playerId",
         "/app/team/$teamId",
+        "/app/auction/",
         "/app/dashboard/",
         "/app/players/",
-        "/app/team/"
+        "/app/team/",
+        "/app/auction/players/get"
       ]
     },
     "/auth/login": {
@@ -300,6 +346,10 @@ export const routeTree = rootRoute
       "filePath": "app/team/$teamId.tsx",
       "parent": "/app"
     },
+    "/app/auction/": {
+      "filePath": "app/auction/index.tsx",
+      "parent": "/app"
+    },
     "/app/dashboard/": {
       "filePath": "app/dashboard/index.tsx",
       "parent": "/app"
@@ -310,6 +360,10 @@ export const routeTree = rootRoute
     },
     "/app/team/": {
       "filePath": "app/team/index.tsx",
+      "parent": "/app"
+    },
+    "/app/auction/players/get": {
+      "filePath": "app/auction/players/get.tsx",
       "parent": "/app"
     }
   }

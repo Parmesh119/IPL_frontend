@@ -70,6 +70,10 @@ const AddPlayerDialog: React.FC<AddPlayerDialogProps> = ({
         setNewPlayer((prev: Player) => ({ ...prev, country: e.target.value })) //Explicitly annotate here
     }
 
+    const handleIPLTeam = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setNewPlayer((prev: Player) => ({ ...prev, iplTeam: e.target.value })) //Explicitly annotate here
+    }
+
     const { theme } = useTheme()
 
     return (
@@ -102,6 +106,12 @@ const AddPlayerDialog: React.FC<AddPlayerDialogProps> = ({
                             Country
                         </Label>
                         <Input id="country" placeholder="Country" name="country" value={newPlayer.country} onChange={handleCountryChange} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="ipl" className="text-right">
+                            IPL Team
+                        </Label>
+                        <Input id="ipl" placeholder="IPL Team" name="ipl" value={newPlayer.iplTeam} onChange={handleIPLTeam} className="col-span-3" />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="role" className="text-right ">

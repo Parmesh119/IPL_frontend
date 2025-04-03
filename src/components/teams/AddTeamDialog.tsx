@@ -37,7 +37,7 @@ export function AddTeamDialog({ isOpen, onClose }: AddTeamDialogProps) {
         mutationFn: (data: Team) => addTeamAction(data),
         onSuccess: () => {
             toast.success("Team added successfully");
-            router.navigate({ to: "/app/team" })
+            window.location.href = "/app/team"
             onClose();
         },
         onError: (error: any) => {

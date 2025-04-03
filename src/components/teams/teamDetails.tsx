@@ -86,7 +86,8 @@ export default function TeamDetails({ teamId }: { teamId: string }) {
             toast.success("Team deleted successfully");
             router.navigate({ to: "/app/team" });
         },
-        onError: () => {
+        onError: (error) => {
+            alert(error.message)
             toast.error("Error while deleting team!!");
         },
     });
@@ -225,7 +226,7 @@ export default function TeamDetails({ teamId }: { teamId: string }) {
                     </div>
 
                     <h2 className="text-lg sm:text-xl font-semibold tracking-tight mb-3 sm:mb-4 text-foreground">
-                        Player Role Counts
+                        Player Counts
                     </h2>
                     <div className="text-md grid w-full grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-10 text-center">
                         <Card className="w-full">

@@ -47,6 +47,16 @@ const items = [
         icon: Shield,
     },
     {
+        title: "Matches",
+        url: "/app/matches/",
+        icon: Trophy,
+    },
+    {
+        title: "Auction",
+        url: "/app/auction/",
+        icon: ReceiptIndianRupeeIcon,
+    },
+    {
         title: "Settings",
         url: "#",
         icon: Settings,

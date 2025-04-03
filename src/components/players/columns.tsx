@@ -46,6 +46,10 @@ export const columns: ColumnDef<Player>[] = [
     header: "Sell Price",
   },
   {
+    accessorKey: "iplTeam",
+    header: "IPL Team",
+  },
+  {
     accessorKey: "status",
     header: "Status",
   }

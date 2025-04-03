@@ -108,6 +108,10 @@ const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
         setEditPlayer({ ...editPlayer, bowlingStyle: bowlingStyle || "" });
     };
 
+    const handleIPLTeam = (iplTeam: string) => {
+        setEditPlayer({ ...editPlayer, iplTeam: iplTeam });
+    };
+
     const handleUpdatePlayer = () => {
         const updatedPlayerData = {
             ...editPlayer,
@@ -169,6 +173,12 @@ const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="country" className="text-right">Country</Label>
                         <Input id="country" name="country" value={editPlayer.country || ""} onChange={handleInputChange} placeholder="Country" className="col-span-3" />
+                    </div>
+
+                    {/* IPL Team */}
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="ipl" className="text-right">IPL Team</Label>
+                        <Input id="ipl" name="ipl" value={editPlayer.iplTeam || ""} onChange={(e) => handleIPLTeam(e.target.value)} placeholder="IPL Team" className="col-span-3" />
                     </div>
 
                     {/* Role Dropdown */}

@@ -11,6 +11,7 @@ export const PlayerSchema = z.object({
   teamId: z.string().optional(),
   basePrice: z.string().min(1, { message: "Base Price is required" }),
   sellPrice: z.string().nullable().optional(),
+  iplTeam: z.string().min(1, { message: "IPL Team is required" }),
   status: z.enum(["Pending", "Sold", "Unsold"]),
 });
 

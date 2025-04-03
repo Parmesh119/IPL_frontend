@@ -5,6 +5,7 @@ import { type Team, type TeamDTO } from '@/schemas/team'
 import { type User } from '@/schemas/users'
 import { authService } from '@/lib/auth'
 import { toast } from 'sonner'
+import { type Auction } from '@/schemas/auction'
 
 export function getBackendUrl() {
     const backendUrl = import.meta.env.BACKEND_URL || 'http://localhost:8080'
@@ -93,5 +94,21 @@ export async function updateTeamAction(team: Team): Promise<Team> {
 
 export async function deleteTeamAction(id: string): Promise<string> {
     const response = await axios.delete(`${getBackendUrl()}/api/team/delete/${id}`)
+    return response.data;
+}
+
+// IPL Auction
+export async function getPlayersForAuction(): Promise<Auction[]> {
+    const response = await axios.post(`${getBackendUrl()}/api/auction/get/players`)
+    return response.data;
+}
+
+export async function markPlayerSold(player: Auction): Promise<string> {
+    const response = await axios.post(`${getBackendUrl()}/api/auction/mark/sold`, player)
+    return response.data;
+}
+
+export async function markPlayerUnsold(player: Auction): Promise<string> {
+    const response = await axios.post(`${getBackendUrl()}/api/auction/mark/unsold`, player)
     return response.data;
 }

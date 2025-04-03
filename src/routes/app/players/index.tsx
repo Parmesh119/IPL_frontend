@@ -15,13 +15,16 @@ import { DataTable } from "@/components/players/data_table"
 import { useQuery } from '@tanstack/react-query';
 import { listPlayersAction, getTeamById } from "@/lib/actions"
 import { LoaderCircle } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
+import { Button } from '@/components/ui/button';
 
 export const Route = createFileRoute('/app/players/')({
   component: PlayerComponent,
 })
 
 async function PlayerComponent() {
-  
+  const navigate = useNavigate();
+
   const { data: updatedPlayers, isLoading, error } = useQuery<Player[]>({
     queryKey: ['players'],
 
@@ -50,9 +53,9 @@ async function PlayerComponent() {
           teamId: teamName || player.teamId,
         };
       });
-      
+
     },
-    
+
   });
 
   if (isLoading) {
@@ -87,7 +90,9 @@ async function PlayerComponent() {
         {updatedPlayers && updatedPlayers.length > 0 ? (
           <DataTable columns={columns} data={updatedPlayers ?? []} />
         ) : (
-          <div>No players found</div>
+          <div>
+            No players found
+          </div>
         )}
       </div>
     </SidebarInset>

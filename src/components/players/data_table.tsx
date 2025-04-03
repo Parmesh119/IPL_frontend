@@ -65,6 +65,7 @@ export function DataTable<TData extends { id: string }, TValue>({
         teamId: "",
         basePrice: "",
         sellPrice: "",
+        iplTeam: "",
         status: "Pending"
     });
 
@@ -210,6 +211,7 @@ export function DataTable<TData extends { id: string }, TValue>({
             teamId: "",
             basePrice: "",
             sellPrice: "",
+            iplTeam: "",
             status: "Pending",
         });
     };

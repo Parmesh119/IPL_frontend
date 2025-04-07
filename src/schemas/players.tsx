@@ -16,3 +16,11 @@ export const PlayerSchema = z.object({
 });
 
 export type Player = z.infer<typeof PlayerSchema>;
+
+export type ListUserRequest = {
+  page: number
+  size: number
+  search?: string | null
+  status?: string[] | null
+  roles?: string[] | null
+}

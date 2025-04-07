@@ -50,6 +50,7 @@ export function DataTable<TData extends { id: string }, TValue>({
 }: DataTableProps<TData, TValue>) {
 
     const { theme } = useTheme()
+    
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
     const [selectedRoles, setSelectedRoles] = useState<string[]>([])
     const [selectedStatus, setSelectedStatus] = useState<string[]>([])

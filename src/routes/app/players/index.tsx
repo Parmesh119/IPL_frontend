@@ -1,100 +1,333 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
+import React, { useState, useMemo } from 'react';
+import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { LoaderCircle, Plus } from 'lucide-react';
+import { useDebounce } from "@uidotdev/usehooks";
+import { toast } from "sonner";
+
+// Shadcn UI Components
+import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
-import { columns } from "@/components/players/columns"
-import { type Player } from "@/schemas/players"
-import { DataTable } from "@/components/players/data_table"
-import { useQuery } from '@tanstack/react-query';
-import { listPlayersAction, getTeamById } from "@/lib/actions"
-import { LoaderCircle } from 'lucide-react';
-import { useNavigate } from '@tanstack/react-router';
-import { Button } from '@/components/ui/button';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuTrigger,
+    DropdownMenuCheckboxItem,
+} from "@/components/ui/dropdown-menu";
 
+// Custom Components & Actions
+import AddPlayerDialog from '@/components/players/AddPlayerDialog';
+import { type Player, PlayerSchema, type ListUserRequest } from "@/schemas/players";
+import {
+    listPlayersAction, // ** Action now returns Promise<Player[]> **
+    getTeamById,
+    addPlayerAction,
+    getAllTeams,
+} from "@/lib/actions";
+
+// Define the Route
 export const Route = createFileRoute('/app/players/')({
-  component: PlayerComponent,
-})
+    component: PlayerComponent,
+});
 
-async function PlayerComponent() {
-  const navigate = useNavigate();
+// --- Constants ---
+const DEFAULT_PAGE_SIZE = 10;
+const ROLES = ["Batsman", "Bowler", "Wicketkeeper", "All-rounder"];
+const STATUSES = ["Pending", "Sold", "Unsold"];
+const BATTING_STYLES = ["Right-handed", "Left-handed"];
+const BOWLING_STYLES = ["Fast", "Spin", "Medium"];
 
-  const { data: updatedPlayers, isLoading, error } = useQuery<Player[]>({
-    queryKey: ['players'],
+// Default empty array for players
+const defaultPlayersData: Player[] = [];
 
-    queryFn: async () => {
-      const players = await listPlayersAction();
+// --- The React Component ---
+function PlayerComponent() {
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
-      if (!players) {
-        return [];
-      }
+    // --- State Management ---
+    const [searchTerm, setSearchTerm] = useState<string>('');
+    const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+    const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: DEFAULT_PAGE_SIZE });
+    const [openAddDialog, setOpenAddDialog] = useState(false);
+    const [newPlayer, setNewPlayer] = useState<Omit<Player, 'id' | 'createdAt' | 'updatedAt'>>({
+        name: "", country: "", age: undefined, role: "", battingStyle: "",
+        bowlingStyle: "", teamId: "", basePrice: "", sellPrice: null,
+        iplTeam: "", status: "Pending",
+    });
 
-      const validTeamIds = players
-        .map((player) => player.teamId)
-        .filter(teamId => teamId !== null && teamId !== undefined) as string[];
+    const debouncedSearch = useDebounce(searchTerm, 300);
 
-      const uniqueTeamIds = [...new Set(validTeamIds)];
+    // --- Data Fetching: Teams ---
+    const { data: teamsData, isLoading: isLoadingTeams, error: errorTeams } = useQuery({
+        queryKey: ["teams"],
+        queryFn: getAllTeams,
+        staleTime: 5 * 60 * 1000,
+    });
+    const safeTeams = useMemo(() => Array.isArray(teamsData) ? teamsData : [], [teamsData]);
 
-      const teamPromises = uniqueTeamIds.map((id) => getTeamById(id));
-      const teams = await Promise.all(teamPromises);
+    if (errorTeams) {
+        console.error("Error fetching teams:", errorTeams);
+        return (<div className='p-4 m-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-md'> Error loading essential team data: {errorTeams.message}. Cannot manage players effectively. Please try reloading. </div>);
+    }
 
-      const teamMap = new Map(teams.map((team) => [team.id, team.name]));
+    // --- Data Fetching: Players (Workaround for missing totalCount) ---
+    const {
+        data: fetchedPlayersList = defaultPlayersData, // Expect Player[] directly, provide default
+        isLoading: isLoadingPlayers,
+        error: errorPlayers,
+        isFetching,
+        // isPlaceholderData is less relevant here as we don't know the total pages
+    } = useQuery<Player[], Error>({ // Expect Player[] directly
+        queryKey: [
+            'playersList',
+            pagination.pageIndex,
+            pagination.pageSize, // Still use pageSize in key for consistency
+            debouncedSearch,
+            selectedRoles,
+            selectedStatuses,
+        ],
+        queryFn: async (): Promise<Player[]> => { // Return Promise<Player[]>
+            const fetchSize = pagination.pageSize + 1;
+            console.log("Fetching players with filters (fetching N+1):", {
+                page: pagination.pageIndex + 1, size: fetchSize, // Use fetchSize
+                search: debouncedSearch || null,
+                roles: selectedRoles.length > 0 ? selectedRoles : null,
+                status: selectedStatuses.length > 0 ? selectedStatuses : null,
+            });
 
-      return players.map((player) => {
-        const teamName = teamMap.get(player.teamId ?? '');
-        return {
-          ...player,
-          teamId: teamName || player.teamId,
+            const filters: ListUserRequest = {
+                page: pagination.pageIndex + 1,
+                size: fetchSize, // Fetch N+1
+                search: debouncedSearch || null,
+                roles: selectedRoles.length > 0 ? selectedRoles : null,
+                status: selectedStatuses.length > 0 ? selectedStatuses : null,
+            };
+
+            try {
+                // *** Assumes listPlayersAction now correctly returns Player[] ***
+                const players = await listPlayersAction(filters);
+
+                // Basic validation: Ensure it's an array
+                if (!Array.isArray(players)) {
+                    console.error("Invalid response structure from listPlayersAction (expected array):", players);
+                    toast.error("Received invalid data structure from server.");
+                    return defaultPlayersData; // Return empty array
+                }
+
+                console.log(`Received ${players.length} players.`); // Debug log
+
+                if (players.length === 0) {
+                    return []; // No players match
+                }
+
+                // --- Map Team Names ---
+                const validTeamIds = players.map(p => p.teamId).filter(id => !!id) as string[];
+                const uniqueTeamIds = [...new Set(validTeamIds)];
+                let teamMap = new Map<string, string>();
+                if (uniqueTeamIds.length > 0) {
+                    const teamPromises = uniqueTeamIds.map(id => getTeamById(id).catch(() => null));
+                    const teamsResults = await Promise.all(teamPromises);
+                    const validTeams = teamsResults.filter(t => t !== null) as { id: string; name: string }[];
+                    teamMap = new Map(validTeams.map(t => [t.id, t.name]));
+                }
+                const mappedPlayers = players.map((player: Player) => {
+                    const teamName = player.teamId ? teamMap.get(player.teamId) : undefined;
+                    return {
+                        ...player,
+                        teamId: teamName || (player.teamId ? `ID: ${player.teamId}` : 'N/A'),
+                    };
+                });
+                // --- End Map Team Names ---
+
+                // *** Return the potentially larger list (N+1 items) ***
+                return mappedPlayers;
+
+            } catch (err: any) {
+                console.error("Error in queryFn fetching players:", err);
+                throw new Error(err.message || "Failed to fetch players");
+            }
+        },
+        // Keep placeholderData to show old data while refetching
+        placeholderData: (previousData) => previousData,
+        staleTime: 30 * 1000,
+        enabled: !isLoadingTeams,
+    });
+
+    // --- Logic for Workaround Pagination ---
+    // Check if there are more items than the page size (indicates a next page)
+    const hasNextPage = useMemo(() => fetchedPlayersList.length > pagination.pageSize, [fetchedPlayersList, pagination.pageSize]);
+    // Data to actually display (only up to pageSize items)
+    const playersData = useMemo(() => fetchedPlayersList.slice(0, pagination.pageSize), [fetchedPlayersList, pagination.pageSize]);
+    // We don't know the real total count or page count anymore
+    // const totalPlayerCount = ???;
+    // const pageCount = ???;
+
+    // --- Add Player Mutation (No changes needed here) ---
+    const { mutate: addPlayer, isPending: isAddingPlayer } = useMutation<Player, Error, Player>({
+        mutationFn: addPlayerAction,
+        onSuccess: (data) => { toast.success(`Player "${data.name}" added successfully`); queryClient.invalidateQueries({ queryKey: ['playersList'] }); setOpenAddDialog(false); handleCancelAdd(); },
+        onError: (error) => { console.error("Error adding player:", error); toast.error(`Error adding player: ${error.message || "An unknown error occurred"}`); },
+    });
+
+    // --- Add Player Dialog Handlers (No changes needed here) ---
+    const handleAddPlayerSubmit = () => { /* ... validation logic ... */
+        const selectedTeam = safeTeams.find((team) => team.name === newPlayer.teamId);
+        const playerToValidate = { /* ... prepare data ... */
+            ...newPlayer, teamId: selectedTeam?.id,
+            age: newPlayer.age === undefined ? undefined : Number(newPlayer.age),
+            sellPrice: newPlayer.sellPrice === "" || newPlayer.sellPrice === null || newPlayer.sellPrice === undefined ? null : String(newPlayer.sellPrice),
+            basePrice: String(newPlayer.basePrice), iplTeam: String(newPlayer.iplTeam), battingStyle: String(newPlayer.battingStyle), role: String(newPlayer.role), country: String(newPlayer.country), status: newPlayer.status ?? "Pending", bowlingStyle: newPlayer.bowlingStyle ? String(newPlayer.bowlingStyle) : undefined,
         };
-      });
+        const validationResult = PlayerSchema.safeParse(playerToValidate);
+        if (!validationResult.success) { /* ... handle errors ... */
+            const errorMessages = validationResult.error.errors.map((err) => `${err.path.join('.') || 'field'}: ${err.message}`).join("\n"); toast.error(`Validation failed:\n${errorMessages}`); console.error("Zod Validation Errors:", validationResult.error.flatten().fieldErrors); return;
+        }
+        if ((validationResult.data.role === "Bowler" || validationResult.data.role === "All-rounder") && !validationResult.data.bowlingStyle) { toast.error("Bowling style is required for Bowlers and All-rounders."); return; }
+        if (validationResult.data.role !== "Bowler" && validationResult.data.role !== "All-rounder" && validationResult.data.bowlingStyle) { validationResult.data.bowlingStyle = undefined; }
+        console.log("Submitting validated player data:", validationResult.data); addPlayer(validationResult.data as Player);
+    };
+    const handleCancelAdd = () => { /* ... reset form ... */
+        setOpenAddDialog(false); setNewPlayer({ name: "", country: "", age: undefined, role: "", battingStyle: "", bowlingStyle: "", teamId: "", basePrice: "", sellPrice: null, iplTeam: "", status: "Pending", });
+    };
 
-    },
+    // --- Filter Toggle Handlers (No changes needed) ---
+    const toggleRole = (role: string) => { /* ... update state and reset pageIndex ... */
+        setSelectedRoles(prev => prev.includes(role) ? prev.filter(r => r !== role) : [...prev, role]); setPagination(p => ({ ...p, pageIndex: 0 }));
+    };
+    const toggleStatus = (status: string) => { /* ... update state and reset pageIndex ... */
+        setSelectedStatuses(prev => prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]); setPagination(p => ({ ...p, pageIndex: 0 }));
+    };
 
-  });
+    // --- Row Click Handler (No changes needed) ---
+    const handleRowClick = (playerId: string | undefined) => { /* ... navigate ... */
+        if (playerId) { navigate({ to: '/app/players/$playerId', params: { playerId } }); } else { console.warn("Attempted to navigate without a valid player ID."); toast.error("Cannot view details: Player ID is missing."); }
+    };
 
-  if (isLoading) {
-    return <div className='flex items-center m-auto'><LoaderCircle />&nbsp; Loading...</div>
-  }
+    // --- Render Logic ---
+    if (isLoadingTeams) { return (<div className='flex items-center justify-center h-screen'> <LoaderCircle className="mr-2 h-6 w-6 animate-spin" /> <span className="text-lg">Loading essential data...</span> </div>); }
 
-  if (error) {
-    return <div>Error while fetching data: {error.message}</div>
-  }
+    return (
+        <SidebarInset className="w-full lg:m-2 sm:m-6 flex flex-col h-full">
+            {/* Header */}
+            <header className="flex flex-col sm:flex-row h-auto sm:h-16 shrink-0 items-center justify-between gap-2 border-b p-4 bg-card">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <SidebarTrigger className="-ml-1 lg:hidden" /> <Separator orientation="vertical" className="mx-2 h-6 hidden lg:block" />
+                    <Breadcrumb> <BreadcrumbList className='tracking-wider text-sm sm:text-base'> <BreadcrumbItem> <Link to="/app/players" className="transition-colors hover:text-foreground"><BreadcrumbLink>Players</BreadcrumbLink></Link> </BreadcrumbItem> <BreadcrumbSeparator /> <BreadcrumbItem> <BreadcrumbPage>List</BreadcrumbPage> </BreadcrumbItem> </BreadcrumbList> </Breadcrumb>
+                </div>
+                <AddPlayerDialog open={openAddDialog} setOpen={setOpenAddDialog} newPlayer={newPlayer as Player} setNewPlayer={setNewPlayer as (player: Player) => void} teams={safeTeams} roles={ROLES} battingStyles={BATTING_STYLES} bowlingStyles={BOWLING_STYLES} handleAddPlayer={handleAddPlayerSubmit} handleCancelAdd={handleCancelAdd} isLoading={isAddingPlayer} />
+            </header>
 
-  return (
-    <SidebarInset className="w-full lg:m-2 sm:m-6">
-      <header className="flex h-16 shrink-0 items-center gap-2">
-        <div className="flex items-center gap-2 px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb>
-            <BreadcrumbList className='tracking-wider'>
-              <BreadcrumbItem>
-                <BreadcrumbLink href="#">Players</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>List</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-      </header>
-      <Separator className="mb-4" />
-      <div className="container mx-auto py-2 px-2">
-        {updatedPlayers && updatedPlayers.length > 0 ? (
-          <DataTable columns={columns} data={updatedPlayers ?? []} />
-        ) : (
-          <div>
-            No players found
-          </div>
-        )}
-      </div>
-    </SidebarInset>
-  )
+            {/* Filter Controls */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-b shrink-0 bg-card">
+                <Input placeholder="Filter by player name..." value={searchTerm} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)} className="max-w-xs w-full sm:w-auto" />
+                <div className="flex gap-2 flex-wrap justify-start sm:justify-end w-full sm:w-auto">
+                    <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-2" /> Role {selectedRoles.length > 0 ? `(${selectedRoles.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="end">{ROLES.map((role) => (<DropdownMenuCheckboxItem key={role} checked={selectedRoles.includes(role)} onCheckedChange={() => toggleRole(role)} onSelect={(e) => e.preventDefault()}>{role}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
+                    <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-2" /> Status {selectedStatuses.length > 0 ? `(${selectedStatuses.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="end">{STATUSES.map((status) => (<DropdownMenuCheckboxItem key={status} checked={selectedStatuses.includes(status)} onCheckedChange={() => toggleStatus(status)} onSelect={(e) => e.preventDefault()}>{status}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
+                </div>
+            </div>
+
+            {/* Main Content Area */}
+            <div className="flex-1 container mx-auto py-4 px-0 sm:px-4 relative overflow-y-auto">
+                {/* Loading / Error States */}
+                {(isLoadingPlayers || isFetching) && (<div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10 rounded-md"><LoaderCircle className="mr-2 h-5 w-5 animate-spin" /> Loading Players...</div>)}
+                {errorPlayers && !isLoadingPlayers && (<div className='p-4 mb-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-md'>Error fetching players: {errorPlayers.message}</div>)}
+
+                {/* Player Table */}
+                <div className="rounded-md border overflow-x-auto">
+                    <Table>
+                        <TableHeader className="bg-muted/50 sticky top-0 z-10">
+                            <TableRow>
+                                <TableHead className="px-4 py-3 whitespace-nowrap w-[150px]"> Sr. No.</TableHead>
+                                <TableHead className="px-4 py-3 whitespace-nowrap w-[150px]">Name</TableHead>
+                                <TableHead className="px-4 py-3 whitespace-nowrap w-[120px]">Country</TableHead>
+                                <TableHead className="px-4 py-3 whitespace-nowrap w-[120px]">IPL Team</TableHead>
+                                <TableHead className="px-4 py-3 whitespace-nowrap w-[80px]">Age</TableHead>
+                                <TableHead className="px-4 py-3 whitespace-nowrap w-[130px]">Role</TableHead>
+                                <TableHead className="px-4 py-3 whitespace-nowrap w-[150px]">Team</TableHead>
+                                <TableHead className="px-4 py-3 whitespace-nowrap w-[100px]">Status</TableHead>
+                                <TableHead className="px-4 py-3 whitespace-nowrap w-[120px]">Batting</TableHead>
+                                <TableHead className="px-4 py-3 whitespace-nowrap w-[120px]">Bowling</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {/* Use playersData (sliced list) */}
+                            {!isLoadingPlayers && !errorPlayers && playersData.length > 0 ? (
+                                playersData.map((player, index) => (
+                                    <TableRow key={index} className="hover:bg-muted/40 cursor-pointer transition-colors duration-150" onClick={() => handleRowClick(player.id)} tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleRowClick(player.id) }} >
+                                        <TableCell className="font-medium px-4 py-2">{index + 1}</TableCell>
+                                        <TableCell className="font-medium px-4 py-2">{player.name || 'N/A'}</TableCell>
+                                        <TableCell className="px-4 py-2">{player.country || 'N/A'}</TableCell>
+                                        <TableCell className="px-4 py-2">{player.iplTeam || 'N/A'}</TableCell>
+                                        <TableCell className="px-4 py-2">{player.age ?? 'N/A'}</TableCell>
+                                        <TableCell className="px-4 py-2">{player.role || 'N/A'}</TableCell>
+                                        <TableCell className="px-4 py-2">{player.teamId}</TableCell>
+                                        <TableCell className="px-4 py-2">{player.status || 'N/A'}</TableCell>
+                                        <TableCell className="px-4 py-2">{player.battingStyle || '-'}</TableCell>
+                                        <TableCell className="px-4 py-2">{player.bowlingStyle || '-'}</TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                !isLoadingPlayers && !isFetching && !errorPlayers && playersData.length === 0 && (<TableRow><TableCell colSpan={9} className="h-24 text-center text-muted-foreground">No players found matching the criteria.</TableCell></TableRow>)
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+
+                {/* Pagination Controls (Workaround Logic) */}
+                {/* Show controls only if on page > 0 OR if there's a next page */}
+                {(pagination.pageIndex > 0 || hasNextPage) && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-2 py-4 mt-4 shrink-0">
+                        {/* Display current page number ONLY */}
+                        <span className="text-sm text-muted-foreground mb-2 sm:mb-0">
+                            Page {pagination.pageIndex + 1}
+                            {/* We cannot show total pages or total players accurately */}
+                        </span>
+                        <div className="flex space-x-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPagination(p => ({ ...p, pageIndex: p.pageIndex - 1 }))}
+                                // Disable Previous if on the first page (index 0)
+                                disabled={pagination.pageIndex === 0}
+                                aria-label="Go to previous page"
+                            >
+                                Previous
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPagination(p => ({ ...p, pageIndex: p.pageIndex + 1 }))}
+                                // Disable Next if hasNextPage is false (based on N+1 fetch)
+                                // Also disable if currently fetching data to prevent rapid clicks
+                                disabled={!hasNextPage || isFetching}
+                                aria-label="Go to next page"
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </div> {/* End Content Area */}
+        </SidebarInset>
+    );
 }

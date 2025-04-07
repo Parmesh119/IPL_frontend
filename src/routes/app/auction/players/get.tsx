@@ -66,11 +66,11 @@ function getPlayersAuction() {
     },
     onSuccess: (data) => {
       setPlayersData(data);
-      setLoading(false); 
+      setLoading(false);
     },
     onError: () => {
       toast.error("Error while fetching players for auction.");
-      setLoading(false); 
+      setLoading(false);
     },
   });
 
@@ -87,7 +87,7 @@ function getPlayersAuction() {
 
   const soldMutation = useMutation({
     mutationFn: async (payload: { player: Auction; sellPrice: string; teamId: string }) => {
-      
+
       await markPlayerSold({
         ...payload.player,
         sellPrice: payload.sellPrice,
@@ -97,10 +97,17 @@ function getPlayersAuction() {
     onSuccess: () => {
       toast.success("Player marked as sold.");
       setIsDialogOpen(false);
-      window.history.back();
+      setLoading(true)
+      getPlayer.mutate();
     },
-    onError: () => {
-      toast.error("Error while marking player as sold.");
+    onError: (error: any) => {
+      const errorMessage = error.response?.data || "Error while marking player as sold.";
+
+      if (errorMessage.includes("Team budget exceeded")) {
+        toast.error("Team budget exceeded!!");
+      } else {
+        toast.error("Error while marking player as sold.");
+      }
     },
   });
 
@@ -111,6 +118,8 @@ function getPlayersAuction() {
     onSuccess: () => {
       toast.success("Player marked as unsold.");
       setIsAlertOpen(false);
+      setLoading(true)
+      getPlayer.mutate();
     },
     onError: () => {
       toast.error("Error while marking player as unsold.");
@@ -126,7 +135,23 @@ function getPlayersAuction() {
       toast.error("Please provide a sell price and select a team.");
       return;
     }
-    
+
+    const sanitizedSellPrice = parseInt(sellPrice.replace(/[^0-9]/g, ""), 10);
+    const sanitizedBasePrice = parseInt(
+      playersData[currentIndex].basePrice.toString().replace(/[^0-9]/g, ""),
+      10
+    );
+
+    if (isNaN(sanitizedSellPrice)) {
+      toast.error("Sell price must be a valid number.");
+      return;
+    }
+
+    if (sanitizedBasePrice > sanitizedSellPrice) {
+      toast.error("Sell price cannot be less than base price.");
+      return;
+    }
+
     const payload = {
       player: playersData[currentIndex],
       sellPrice,
@@ -134,8 +159,6 @@ function getPlayersAuction() {
     };
 
     soldMutation.mutate(payload);
-
-    getPlayer.mutate();
   };
 
   const handleMarkUnsold = () => {
@@ -177,7 +200,7 @@ function getPlayersAuction() {
         </header>
         <Separator className="mb-4" />
 
-        {/* Main Content */}
+
         <div className="w-full min-h-200 m-auto flex flex-col items-center justify-center bg-background text-foreground px-8 py-12">
           {playersData.length > 0 ? (
             <div className="w-full h-full border border-border rounded-xl p-8 shadow-lg bg-card tracking-wider">
@@ -238,11 +261,10 @@ function getPlayersAuction() {
                       <p>
                         <strong>Status:</strong>
                         <span
-                          className={`ml-2 px-4 py-1 rounded-lg text-white text-md font-semibold ${
-                            playersData[currentIndex].status === "Sold"
-                              ? "bg-green-500"
-                              : "bg-red-500"
-                          }`}
+                          className={`ml-2 px-4 py-1 rounded-lg text-white text-md font-semibold ${playersData[currentIndex].status === "Sold"
+                            ? "bg-green-500"
+                            : "bg-red-500"
+                            }`}
                         >
                           {playersData[currentIndex].status}
                         </span>
@@ -308,7 +330,7 @@ function getPlayersAuction() {
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button onClick={handleSaveChanges}>Save changes</Button>
+                      <Button className="cursor-pointer" onClick={handleSaveChanges}>Save changes</Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
@@ -318,7 +340,7 @@ function getPlayersAuction() {
                   <AlertDialogTrigger asChild>
                     <Button
                       variant="destructive"
-                      className="hover:bg-gray-700 text-white text-lg font-semibold px-4 py-4 rounded-md"
+                      className="hover:bg-gray-700 cursor-pointer text-white text-lg font-semibold px-4 py-4 rounded-md"
                     >
                       Mark as Unsold
                     </Button>

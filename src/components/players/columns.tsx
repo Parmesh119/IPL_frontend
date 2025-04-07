@@ -18,10 +18,6 @@ export const columns: ColumnDef<Player>[] = [
     header: "Country",
   },
   {
-    accessorKey: "age",
-    header: "Age",
-  },
-  {
     accessorKey: "role",
     header: "Role",
   },

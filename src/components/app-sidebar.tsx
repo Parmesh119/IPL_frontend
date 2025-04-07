@@ -27,11 +27,6 @@ import { toast } from "sonner"
 
 const items = [
     {
-        title: "Home",
-        url: "/",
-        icon: Home,
-    },
-    {
         title: "Dashboard",
         url: "/app/dashboard/",
         icon: LayoutDashboard,

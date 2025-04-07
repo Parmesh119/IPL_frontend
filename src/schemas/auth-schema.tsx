@@ -2,6 +2,8 @@
 
 import { z } from "zod"
 
+const roleEnum = z.enum(["ADMIN", "USER"]);
+
 export const register_schema = z.object({
     username: z
         .string({ required_error: "Username is required!!" })
@@ -26,6 +28,8 @@ export const register_schema = z.object({
         .regex(/[a-z]/, "Password must contain at least one lowercase letter")
         .regex(/\d/, "Password must contain at least one digit")
         .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character"),
+        
+        role: z.array(roleEnum).default(["USER"])
 })
 
 export const login_schema = z.object({

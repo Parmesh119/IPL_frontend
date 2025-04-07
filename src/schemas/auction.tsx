@@ -9,7 +9,7 @@ export const AuctionSchema = z.object({
     role: z.string().min(1),
     iplTeam: z.string().min(1).optional(),
     sellPrice: z.string().optional(),
-    teamId: z.string().optional()
+    teamId: z.string().optional(),
 });
 
 export type Auction = z.infer<typeof AuctionSchema>;

@@ -1,4 +1,4 @@
-import { User, Home, ChevronUp, User2, Shield, Trophy, Settings, LayoutDashboard } from "lucide-react"
+import { User, ChevronUp, User2, Shield, Trophy, Settings, LayoutDashboard } from "lucide-react"
 import { BadgeCheck, LogOut, Moon, Sun, ReceiptIndianRupeeIcon } from 'lucide-react'
 import {
     Sidebar,
@@ -24,6 +24,7 @@ import { useMutation } from "@tanstack/react-query"
 import { getUserDetails } from "@/lib/actions"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
+import { authService } from "@/lib/auth"
 
 const items = [
     {
@@ -59,12 +60,17 @@ const items = [
 ]
 
 export function AppSidebar() {
-
+    const [username, setUsername] = useState<string>("");
     useEffect(() => {
-        profileMutation.mutate()
-    }, [])
+        authService.getUsername().then((storedUsername) => {
+            if (storedUsername) {
+                setUsername(storedUsername);
+            }
+        });
+
+        profileMutation.mutate();
+    }, []);
     const { setTheme, theme } = useTheme()
-    const [username, setUsername] = useState("")
     const navigate = useNavigate()
 
     const hadleLogout = () => {
@@ -75,14 +81,15 @@ export function AppSidebar() {
     const profileMutation = useMutation({
         mutationFn: getUserDetails,
         onSuccess: (data) => {
-            setUsername(data.username)
+            authService.storeUsername(data.username)
         },
         onError: (error) => {
             toast.error("Error fetching user details")
             console.log(error.message)
         }
     })
-
+    
+    
     return (
         <Sidebar className="rounded-xl">
             <SidebarContent className="cursor-pointer" >
@@ -112,7 +119,7 @@ export function AppSidebar() {
                             <DropdownMenuTrigger asChild>
                                 <SidebarMenuButton className="flex items-center space-x-2">
                                     <User2 />
-                                    <span>{username ? username : "User"}</span>
+                                    <span>{username || "User"}</span>
                                     <ChevronUp className="ml-auto" />
                                 </SidebarMenuButton>
                             </DropdownMenuTrigger>

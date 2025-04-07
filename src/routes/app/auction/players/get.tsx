@@ -45,6 +45,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import TeamDetails from "@/components/teams/teamDetails";
 
 export const Route = createFileRoute("/app/auction/players/get")({
   component: getPlayersAuction,
@@ -364,8 +365,8 @@ function getPlayersAuction() {
                 <Button
                   variant="outline"
                   onClick={handleNextPlayer}
-                  disabled={loading || playersData.length === 0}
-                  className="border-primary text-primary text-lg font-semibold px-6 py-3 rounded-lg"
+                  disabled={loading || playersData.length === 0 || playersData[currentIndex].status === "Currnet_Bid"}
+                  className="cursor-pointer border-primary text-primary text-lg font-semibold px-6 py-3 rounded-lg"
                 >
                   Next Player →
                 </Button>

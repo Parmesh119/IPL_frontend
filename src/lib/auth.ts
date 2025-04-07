@@ -8,6 +8,7 @@ const STORAGE_KEYS = {
     REFRESH_TOKEN: 'app-refreshToken',
     SUB: 'app-sub',
     USER_ID: 'app-userId',
+    USERNAME : 'app-username',
     EXP: 'app-exp',
     IAT: 'app-iat',
 }
@@ -112,6 +113,14 @@ export const authService = {
         } catch (error) {
             console.error('Error decoding token:', error)
         }
+    },
+
+    async storeUsername(username: string) {
+        localStorage.setItem(STORAGE_KEYS.USERNAME, username)
+    },
+
+    async getUsername(): Promise<string> {
+        return localStorage.getItem(STORAGE_KEYS.USERNAME) || ''
     },
 
     async refreshToken(): Promise<string> {

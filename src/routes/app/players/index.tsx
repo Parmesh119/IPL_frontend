@@ -137,17 +137,15 @@ function PlayerComponent() {
             };
 
             try {
-                // *** Assumes listPlayersAction now correctly returns Player[] ***
                 const players = await listPlayersAction(filters);
-
-                // Basic validation: Ensure it's an array
+                
                 if (!Array.isArray(players)) {
                     toast.error("Received invalid data structure from server.");
                     return defaultPlayersData; // Return empty array
                 }
 
                 if (players.length === 0) {
-                    return []; // No players match
+                    return [];
                 }
 
                 // --- Map Team Names ---
@@ -258,12 +256,12 @@ function PlayerComponent() {
 
             {/* Filter Controls */}
             <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-b shrink-0 ${theme === "dark" ? "bg-black" : "bg-white"}`}>
-                <Input placeholder="Filter by player name..." value={searchTerm} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)} className="max-w-xs w-full sm:w-auto" />
+                <Input placeholder="Filter by player name..." value={searchTerm} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)} className="w-full sm:w-100" autoFocus />
                 <div className="flex gap-2 flex-wrap justify-start sm:justify-end w-full sm:w-auto">
-                    <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto cursor-pointer"><Plus className="h-4 w-4 mr-2" /> Role {selectedRoles.length > 0 ? `(${selectedRoles.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="end">{ROLES.map((role) => (<DropdownMenuCheckboxItem className={`cursor-pointer`} key={role} checked={selectedRoles.includes(role)} onCheckedChange={() => toggleRole(role)} onSelect={(e) => e.preventDefault()}>{role}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
-                    <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto cursor-pointer"><Plus className="h-4 w-4 mr-2" /> Status {selectedStatuses.length > 0 ? `(${selectedStatuses.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="end">{STATUSES.map((status) => (<DropdownMenuCheckboxItem className='cursor-pointer' key={status} checked={selectedStatuses.includes(status)} onCheckedChange={() => toggleStatus(status)} onSelect={(e) => e.preventDefault()}>{status}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
-                    <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto cursor-pointer"><Plus className="h-4 w-4 mr-2" /> IPL Team {selectIPLTeam.length > 0 ? `(${selectIPLTeam.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="end">{IPL_TEAMS.map((iplTeam) => (<DropdownMenuCheckboxItem className='cursor-pointer' key={iplTeam} checked={selectIPLTeam.includes(iplTeam)} onCheckedChange={() => toggleiplTeam(iplTeam)} onSelect={(e) => e.preventDefault()}>{iplTeam}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
-                    <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto cursor-pointer"><Plus className="h-4 w-4 mr-2" /> Team {selectTeam.length > 0 ? `(${selectTeam.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="end">{safeTeams.map((team) => (<DropdownMenuCheckboxItem className='cursor-pointer' key={team.id} checked={selectTeam.includes(team.id || "")} onCheckedChange={() => toggleTeam(team.id || "")} onSelect={(e) => e.preventDefault()}>{team.name}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
+                    <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto cursor-pointer"><Plus className="h-4 w-4 mr-2" /> Role {selectedRoles.length > 0 ? `(${selectedRoles.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="center" className='w-auto'>{ROLES.map((role) => (<DropdownMenuCheckboxItem className={`cursor-pointer`} key={role} checked={selectedRoles.includes(role)} onCheckedChange={() => toggleRole(role)} onSelect={(e) => e.preventDefault()}>{role}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
+                    <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto cursor-pointer"><Plus className="h-4 w-4 mr-2" /> Status {selectedStatuses.length > 0 ? `(${selectedStatuses.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="center" className='w-auto'>{STATUSES.map((status) => (<DropdownMenuCheckboxItem className='cursor-pointer' key={status} checked={selectedStatuses.includes(status)} onCheckedChange={() => toggleStatus(status)} onSelect={(e) => e.preventDefault()}>{status}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
+                    <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto cursor-pointer"><Plus className="h-4 w-4 mr-2" /> IPL Team {selectIPLTeam.length > 0 ? `(${selectIPLTeam.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="center" className='w-auto'>{IPL_TEAMS.map((iplTeam) => (<DropdownMenuCheckboxItem className='cursor-pointer' key={iplTeam} checked={selectIPLTeam.includes(iplTeam)} onCheckedChange={() => toggleiplTeam(iplTeam)} onSelect={(e) => e.preventDefault()}>{iplTeam}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
+                    <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto cursor-pointer"><Plus className="h-4 w-4 mr-2" /> Team {selectTeam.length > 0 ? `(${selectTeam.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="center" className='w-auto'>{safeTeams.map((team) => (<DropdownMenuCheckboxItem className='cursor-pointer' key={team.id} checked={selectTeam.includes(team.id || "")} onCheckedChange={() => toggleTeam(team.id || "")} onSelect={(e) => e.preventDefault()}>{team.name}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
                 </div>
             </div>
 

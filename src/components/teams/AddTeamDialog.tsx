@@ -16,6 +16,7 @@ import { addTeamAction } from "@/lib/actions";
 import { toast } from "sonner";
 import { useTheme } from "../theme-provider";
 import { useRouter } from "@tanstack/react-router";
+import { Label } from "../ui/label";
 
 interface AddTeamDialogProps {
     isOpen: boolean;
@@ -57,14 +58,17 @@ export function AddTeamDialog({ isOpen, onClose }: AddTeamDialogProps) {
                 </DialogHeader>
                 <form onSubmit={handleSubmit((data) => addTeam(data))} className="flex flex-col space-y-4">
                     <div>
-                        <Input placeholder="Name" {...register("name")} />
+                        <Label htmlFor="name" className="mb-2 font-medium tracking-wider text-md">Team Name</Label>
+                        <Input id="name" placeholder="Name" {...register("name")} />
                         {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
                     </div>
                     <div>
+                        <Label htmlFor="owner" className="mb-2 font-medium tracking-wider text-md">Owner</Label>
                         <Input placeholder="Owner" {...register("owner")} />
                         {errors.owner && <p className="text-red-500 text-sm">{errors.owner.message}</p>}
                     </div>
                     <div>
+                        <Label htmlFor="coach" className="mb-2 font-medium tracking-wider text-md">Coach</Label>
                         <Input placeholder="Coach" {...register("coach")} />
                         {errors.coach && <p className="text-red-500 text-sm">{errors.coach.message}</p>}
                     </div>

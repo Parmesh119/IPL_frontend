@@ -88,7 +88,6 @@ function PlayerComponent() {
     const safeTeams = useMemo(() => Array.isArray(teamsData) ? teamsData : [], [teamsData]);
 
     if (errorTeams) {
-        console.error("Error fetching teams:", errorTeams);
         return (<div className='p-4 m-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-md'> Error loading essential team data: {errorTeams.message}. Cannot manage players effectively. Please try reloading. </div>);
     }
 
@@ -125,12 +124,9 @@ function PlayerComponent() {
 
                 // Basic validation: Ensure it's an array
                 if (!Array.isArray(players)) {
-                    console.error("Invalid response structure from listPlayersAction (expected array):", players);
                     toast.error("Received invalid data structure from server.");
                     return defaultPlayersData; // Return empty array
                 }
-
-                console.log(`Received ${players.length} players.`); // Debug log
 
                 if (players.length === 0) {
                     return []; // No players match
@@ -159,7 +155,6 @@ function PlayerComponent() {
                 return mappedPlayers;
 
             } catch (err: any) {
-                console.error("Error in queryFn fetching players:", err);
                 throw new Error(err.message || "Failed to fetch players");
             }
         },
@@ -182,7 +177,7 @@ function PlayerComponent() {
     const { mutate: addPlayer, isPending: isAddingPlayer } = useMutation<Player, Error, Player>({
         mutationFn: addPlayerAction,
         onSuccess: (data) => { toast.success(`Player "${data.name}" added successfully`); queryClient.invalidateQueries({ queryKey: ['playersList'] }); setOpenAddDialog(false); handleCancelAdd(); },
-        onError: (error) => { console.error("Error adding player:", error); toast.error(`Error adding player: ${error.message || "An unknown error occurred"}`); },
+        onError: (error) => { toast.error(`Error adding player: ${error.message || "An unknown error occurred"}`); },
     });
 
     // --- Add Player Dialog Handlers (No changes needed here) ---
@@ -196,11 +191,11 @@ function PlayerComponent() {
         };
         const validationResult = PlayerSchema.safeParse(playerToValidate);
         if (!validationResult.success) { /* ... handle errors ... */
-            const errorMessages = validationResult.error.errors.map((err) => `${err.path.join('.') || 'field'}: ${err.message}`).join("\n"); toast.error(`Validation failed:\n${errorMessages}`); console.error("Zod Validation Errors:", validationResult.error.flatten().fieldErrors); return;
+            const errorMessages = validationResult.error.errors.map((err) => `${err.path.join('.') || 'field'}: ${err.message}`).join("\n"); toast.error(`Validation failed:\n${errorMessages}`); return;
         }
         if ((validationResult.data.role === "Bowler" || validationResult.data.role === "All-rounder") && !validationResult.data.bowlingStyle) { toast.error("Bowling style is required for Bowlers and All-rounders."); return; }
         if (validationResult.data.role !== "Bowler" && validationResult.data.role !== "All-rounder" && validationResult.data.bowlingStyle) { validationResult.data.bowlingStyle = undefined; }
-        console.log("Submitting validated player data:", validationResult.data); addPlayer(validationResult.data as Player);
+        addPlayer(validationResult.data as Player);
     };
     const handleCancelAdd = () => { /* ... reset form ... */
         setOpenAddDialog(false); setNewPlayer({ name: "", country: "", age: undefined, role: "", battingStyle: "", bowlingStyle: "", teamId: "", basePrice: "", sellPrice: null, iplTeam: "", status: "Pending", });
@@ -216,7 +211,7 @@ function PlayerComponent() {
 
     // --- Row Click Handler (No changes needed) ---
     const handleRowClick = (playerId: string | undefined) => { /* ... navigate ... */
-        if (playerId) { navigate({ to: '/app/players/$playerId', params: { playerId } }); } else { console.warn("Attempted to navigate without a valid player ID."); toast.error("Cannot view details: Player ID is missing."); }
+        if (playerId) { navigate({ to: '/app/players/$playerId', params: { playerId } }); } else { toast.error("Cannot view details: Player ID is missing."); }
     };
 
     // --- Render Logic ---

@@ -60,22 +60,18 @@ export default function TeamDetails({ teamId }: { teamId: string }) {
     });
 
     const handleMakeCaptain = () => {
-        console.log("Make Captain action triggered for team:", teamId);
         alert("Make Captain: Functionality not yet implemented.");
     };
 
     const handleMakeViceCaptain = () => {
-        console.log("Make Vice-Captain action triggered for team:", teamId);
         alert("Make Vice-Captain: Functionality not yet implemented.");
     };
 
     const handleAddPlayer = () => {
-        console.log("Add Player action triggered for team:", teamId);
         alert("Add Player: Functionality not yet implemented.");
     };
 
     const handleRemovePlayer = () => {
-        console.log("Remove Player action triggered for team:", teamId);
         alert("Remove Player: Functionality not yet implemented.");
     };
 
@@ -127,7 +123,8 @@ export default function TeamDetails({ teamId }: { teamId: string }) {
 
     const teamData = {
         name: team?.name ?? 'Unnamed Team',
-        captain: team?.captain ?? 'N/A',
+        owner: team?.owner ?? 'Unknown Owner',
+        captain: team?.captain ?? 'Unknown Captain',
         amountSpent: team?.spent ?? 0,
         totalPlayers: team?.players ?? 0,
         batsmenCount: team?.batsmenCount ?? 0,
@@ -212,16 +209,16 @@ export default function TeamDetails({ teamId }: { teamId: string }) {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
                         <div>
-                            <Label htmlFor="captain" className="text-sm font-medium text-muted-foreground">Captain</Label>
-                            <Input id="captain" value={teamData.captain || "No Captain Assigned"} readOnly className="mt-1" />
+                            <Label htmlFor="owner" className="text-sm font-medium text-muted-foreground">Owner</Label>
+                            <Input id="owner" disabled value={teamData.owner || "No Captain Assigned"} readOnly className="mt-1 font-bold tracking-wider" />
                         </div>
                         <div>
                             <Label htmlFor="amountSpent" className="text-sm font-medium text-muted-foreground">Amount Spent</Label>
-                            <Input id="amountSpent" type="number" value={teamData.amountSpent} readOnly className="mt-1" />
+                            <Input disabled id="amountSpent" type="number" value={teamData.amountSpent} readOnly className="mt-1 font-bold" />
                         </div>
                         <div>
                             <Label htmlFor="totalPlayers" className="text-sm font-medium text-muted-foreground">Total Players</Label>
-                            <Input id="totalPlayers" type="number" value={teamData.totalPlayers} readOnly className="mt-1" />
+                            <Input disabled id="totalPlayers" type="number" value={teamData.totalPlayers} readOnly className="mt-1 font-bold" />
                         </div>
                     </div>
 

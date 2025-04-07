@@ -16,6 +16,7 @@ import { updateTeamAction } from "@/lib/actions"; // Replace with your API call
 import { toast } from "sonner";
 import { useTheme } from "../theme-provider";
 import { useRouter } from "@tanstack/react-router";
+import { Label } from "../ui/label";
 
 interface EditTeamDialogProps {
     open: boolean;
@@ -67,13 +68,16 @@ export function EditTeamDialog({ open, onClose, team }: EditTeamDialogProps) {
                 </DialogHeader>
                 <form onSubmit={handleSubmit(handleUpdateTeam)} className="flex flex-col space-y-4">
                     <div>
-                        <Input placeholder="Name" {...register("name")} defaultValue={team.name} autoFocus />
+                        <Label htmlFor="name" className="text-md font-medium tracking-wider mb-2">Team Name</Label>
+                        <Input id="name" placeholder="Name" {...register("name")} defaultValue={team.name} autoFocus />
                     </div>
                     <div>
-                        <Input placeholder="Owner" {...register("owner")} defaultValue={team.owner} />
+                        <Label htmlFor="owner" className="text-md font-medium tracking-wider mb-2">Owner</Label>
+                        <Input id="owner" placeholder="Owner" {...register("owner")} defaultValue={team.owner} />
                     </div>
                     <div>
-                        <Input placeholder="Coach" {...register("coach")} defaultValue={team.coach} />
+                        <Label htmlFor="coach" className="text-md font-medium tracking-wider mb-2">Coach</Label>
+                        <Input id="coach" placeholder="Coach" {...register("coach")} defaultValue={team.coach} />
                     </div>
                     <DialogFooter>
                         <Button variant="outline" className="cursor-pointer" type="button" onClick={onClose}>Cancel</Button>

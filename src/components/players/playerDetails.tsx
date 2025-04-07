@@ -153,10 +153,6 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({
             </div>
           </div>
 
-
-
-
-
         </CardContent>
       </Card>
 

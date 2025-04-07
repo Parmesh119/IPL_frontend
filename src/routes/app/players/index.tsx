@@ -56,6 +56,18 @@ const ROLES = ["Batsman", "Bowler", "Wicketkeeper", "All-rounder"];
 const STATUSES = ["Pending", "Sold", "Unsold", "Current_Bid"];
 const BATTING_STYLES = ["Right-handed", "Left-handed"];
 const BOWLING_STYLES = ["Fast", "Spin", "Medium"];
+const IPL_TEAMS = [
+    "Chennai Super Kings",
+    "Mumbai Indians",
+    "Royal Challengers Bangalore",
+    "Kolkata Knight Riders",
+    "Rajasthan Royals",
+    "Delhi Capitals",
+    "Sunrisers Hyderabad",
+    "Punjab Kings",
+    "Lucknow Super Giants",
+    "Gujarat Titans"
+  ];
 
 // Default empty array for players
 const defaultPlayersData: Player[] = [];
@@ -69,6 +81,8 @@ function PlayerComponent() {
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
     const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+    const [selectIPLTeam, setSelectIPLTeam] = useState<string[]>([]);
+    const [selectTeam, setSelectTeam] = useState<string[]>([]);
     const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: DEFAULT_PAGE_SIZE });
     const [openAddDialog, setOpenAddDialog] = useState(false);
     const [newPlayer, setNewPlayer] = useState<Omit<Player, 'id' | 'createdAt' | 'updatedAt'>>({
@@ -106,6 +120,8 @@ function PlayerComponent() {
             debouncedSearch,
             selectedRoles,
             selectedStatuses,
+            selectIPLTeam,
+            selectTeam,
         ],
         queryFn: async (): Promise<Player[]> => { // Return Promise<Player[]>
             const fetchSize = pagination.pageSize;
@@ -116,6 +132,8 @@ function PlayerComponent() {
                 search: debouncedSearch || null,
                 roles: selectedRoles.length > 0 ? selectedRoles : null,
                 status: selectedStatuses.length > 0 ? selectedStatuses : null,
+                iplTeam: selectIPLTeam.length > 0 ? selectIPLTeam : null,
+                team: selectTeam.length > 0 ? teamsData?.map(team => team.id).filter((id): id is string => id !== undefined && selectTeam.includes(id)) : null,
             };
 
             try {
@@ -209,6 +227,14 @@ function PlayerComponent() {
         setSelectedStatuses(prev => prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]); setPagination(p => ({ ...p, pageIndex: 0 }));
     };
 
+    const toggleiplTeam = (iplTeam: string) => {
+        setSelectIPLTeam(prev => prev.includes(iplTeam) ? prev.filter(t => t !== iplTeam) : [...prev, iplTeam]); setPagination(p => ({ ...p, pageIndex: 0 }));
+    };
+
+    const toggleTeam = (teamId: string) => {
+        setSelectTeam(prev => prev.includes(teamId) ? prev.filter(t => t !== teamId) : [...prev, teamId]); setPagination(p => ({ ...p, pageIndex: 0 }));
+    };
+
     // --- Row Click Handler (No changes needed) ---
     const handleRowClick = (playerId: string | undefined) => { /* ... navigate ... */
         if (playerId) { navigate({ to: '/app/players/$playerId', params: { playerId } }); } else { toast.error("Cannot view details: Player ID is missing."); }
@@ -227,7 +253,7 @@ function PlayerComponent() {
                     <SidebarTrigger className="-ml-1" /> <Separator orientation="vertical" className="mx-2 h-6" />
                     <Breadcrumb> <BreadcrumbList className='tracking-wider text-sm sm:text-base'> <BreadcrumbItem> <Link to="/app/players" className="transition-colors hover:text-foreground"><BreadcrumbLink>Players</BreadcrumbLink></Link> </BreadcrumbItem> <BreadcrumbSeparator /> <BreadcrumbItem> <BreadcrumbPage>List</BreadcrumbPage> </BreadcrumbItem> </BreadcrumbList> </Breadcrumb>
                 </div>
-                <AddPlayerDialog open={openAddDialog} setOpen={setOpenAddDialog} newPlayer={newPlayer as Player} setNewPlayer={setNewPlayer as (player: Player) => void} teams={safeTeams} roles={ROLES} battingStyles={BATTING_STYLES} bowlingStyles={BOWLING_STYLES} handleAddPlayer={handleAddPlayerSubmit} handleCancelAdd={handleCancelAdd} />
+                <AddPlayerDialog open={openAddDialog} setOpen={setOpenAddDialog} newPlayer={newPlayer as Player} setNewPlayer={setNewPlayer as (player: Player) => void} teams={safeTeams} roles={ROLES} IPL_TEAMS={IPL_TEAMS} battingStyles={BATTING_STYLES} bowlingStyles={BOWLING_STYLES} handleAddPlayer={handleAddPlayerSubmit} handleCancelAdd={handleCancelAdd} />
             </header>
 
             {/* Filter Controls */}
@@ -236,6 +262,8 @@ function PlayerComponent() {
                 <div className="flex gap-2 flex-wrap justify-start sm:justify-end w-full sm:w-auto">
                     <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto cursor-pointer"><Plus className="h-4 w-4 mr-2" /> Role {selectedRoles.length > 0 ? `(${selectedRoles.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="end">{ROLES.map((role) => (<DropdownMenuCheckboxItem className={`cursor-pointer`} key={role} checked={selectedRoles.includes(role)} onCheckedChange={() => toggleRole(role)} onSelect={(e) => e.preventDefault()}>{role}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
                     <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto cursor-pointer"><Plus className="h-4 w-4 mr-2" /> Status {selectedStatuses.length > 0 ? `(${selectedStatuses.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="end">{STATUSES.map((status) => (<DropdownMenuCheckboxItem className='cursor-pointer' key={status} checked={selectedStatuses.includes(status)} onCheckedChange={() => toggleStatus(status)} onSelect={(e) => e.preventDefault()}>{status}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
+                    <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto cursor-pointer"><Plus className="h-4 w-4 mr-2" /> IPL Team {selectIPLTeam.length > 0 ? `(${selectIPLTeam.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="end">{IPL_TEAMS.map((iplTeam) => (<DropdownMenuCheckboxItem className='cursor-pointer' key={iplTeam} checked={selectIPLTeam.includes(iplTeam)} onCheckedChange={() => toggleiplTeam(iplTeam)} onSelect={(e) => e.preventDefault()}>{iplTeam}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
+                    <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto cursor-pointer"><Plus className="h-4 w-4 mr-2" /> Team {selectTeam.length > 0 ? `(${selectTeam.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="end">{safeTeams.map((team) => (<DropdownMenuCheckboxItem className='cursor-pointer' key={team.id} checked={selectTeam.includes(team.id || "")} onCheckedChange={() => toggleTeam(team.id || "")} onSelect={(e) => e.preventDefault()}>{team.name}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
                 </div>
             </div>
 
@@ -255,6 +283,7 @@ function PlayerComponent() {
                                 <TableHead className="px-4 py-3 whitespace-nowrap w-[120px]">Country</TableHead>
                                 <TableHead className="px-4 py-3 whitespace-nowrap w-[120px]">IPL Team</TableHead>
                                 <TableHead className="px-4 py-3 whitespace-nowrap w-[80px]">Base Price</TableHead>
+                                <TableHead className="px-4 py-3 whitespace-nowrap w-[80px]">Sell Price</TableHead>
                                 <TableHead className="px-4 py-3 whitespace-nowrap w-[130px]">Role</TableHead>
                                 <TableHead className="px-4 py-3 whitespace-nowrap w-[150px]">Team</TableHead>
                                 <TableHead className="px-4 py-3 whitespace-nowrap w-[100px]">Status</TableHead>
@@ -270,6 +299,7 @@ function PlayerComponent() {
                                         <TableCell className="px-4 py-2">{player.country || 'N/A'}</TableCell>
                                         <TableCell className="px-4 py-2">{player.iplTeam || 'N/A'}</TableCell>
                                         <TableCell className="px-4 py-2">{player.basePrice ?? 'N/A'}</TableCell>
+                                        <TableCell className="px-4 py-2">{player.basePrice ? player.sellPrice ?? "N / A" : "-"}</TableCell>
                                         <TableCell className="px-4 py-2">{player.role || 'N/A'}</TableCell>
                                         <TableCell className="px-4 py-2">{player.teamId}</TableCell>
                                         <TableCell className="px-4 py-2">{player.status || 'N/A'}</TableCell>
@@ -296,9 +326,9 @@ function PlayerComponent() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setPagination(p => ({ ...p, pageIndex: p.pageIndex - 1 }))}
-                                // Disable Previous if on the first page (index 0)
                                 disabled={pagination.pageIndex === 0}
                                 aria-label="Go to previous page"
+                                className='cursor-pointer'
                             >
                                 Previous
                             </Button>
@@ -306,10 +336,9 @@ function PlayerComponent() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setPagination(p => ({ ...p, pageIndex: p.pageIndex + 1 }))}
-                                // Disable Next if hasNextPage is false (based on N+1 fetch)
-                                // Also disable if currently fetching data to prevent rapid clicks
                                 disabled={!hasNextPage || isFetching}
                                 aria-label="Go to next page"
+                                className='cursor-pointer'
                             >
                                 Next
                             </Button>

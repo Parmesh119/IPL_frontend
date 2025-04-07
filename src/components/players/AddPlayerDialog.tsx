@@ -26,6 +26,7 @@ interface AddPlayerDialogProps {
     setNewPlayer: (player: Player) => void;
     teams: any[]; // Replace 'any[]' with the actual type of your 'teams' data
     roles: string[];
+    IPL_TEAMS: string[];
     battingStyles: string[];
     bowlingStyles: string[];
     handleAddPlayer: () => void;
@@ -39,6 +40,7 @@ const AddPlayerDialog: React.FC<AddPlayerDialogProps> = ({
     setNewPlayer,
     teams,
     roles,
+    IPL_TEAMS,
     battingStyles,
     bowlingStyles,
     handleAddPlayer,
@@ -53,6 +55,10 @@ const AddPlayerDialog: React.FC<AddPlayerDialogProps> = ({
     const handleRoleChange = (role: string) => {
         setNewPlayer((prev: Player) => ({ ...prev, role })); //Explicitly annotate here
     };
+
+    const handleIPLTeamChange = (iplTeam: string) => {
+        setNewPlayer((prev: Player) => ({ ...prev, iplTeam })); //Explicitly annotate here
+    }
 
     const handleTeamChange = (teamId: string) => {
         setNewPlayer((prev: Player) => ({ ...prev, teamId })); //Explicitly annotate here
@@ -108,10 +114,19 @@ const AddPlayerDialog: React.FC<AddPlayerDialogProps> = ({
                         <Input id="country" placeholder="Country" name="country" value={newPlayer.country} onChange={handleCountryChange} className="col-span-3" />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="ipl" className="text-right">
+                        <Label htmlFor="iplTeam" className="text-right">
                             IPL Team
                         </Label>
-                        <Input id="ipl" placeholder="IPL Team" name="ipl" value={newPlayer.iplTeam} onChange={handleIPLTeam} className="col-span-3" />
+                        <Select onValueChange={handleIPLTeamChange} defaultValue="">
+                            <SelectTrigger className="col-span-3 cursor-pointer">
+                                <SelectValue placeholder="Select IPL TEAM" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {IPL_TEAMS.map(ipl => (
+                                    <SelectItem className="cursor-pointer" key={String(ipl)} value={ipl}>{ipl}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="role" className="text-right ">

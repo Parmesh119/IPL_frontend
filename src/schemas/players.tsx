@@ -23,4 +23,6 @@ export type ListUserRequest = {
   search?: string | null
   status?: string[] | null
   roles?: string[] | null
+  iplTeam?: string[] | null
+  team?: string[] | null
 }

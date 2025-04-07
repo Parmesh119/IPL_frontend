@@ -96,7 +96,6 @@ export function DataTable<TData extends { id: string }, TValue>({
     const battingStyles = ["Right-handed", "Left-handed"];
     const bowlingStyles = ["Fast", "Spin", "Medium"];
 
-
     const { data: teams, isLoading: isLoadingTeams, error: errorTeams } = useQuery({
         queryKey: ["teams"],
         queryFn: async () => {
@@ -282,6 +281,7 @@ export function DataTable<TData extends { id: string }, TValue>({
                             ))}
                         </DropdownMenuContent>
                     </DropdownMenu>
+                    
                 </div>
                 <AddPlayerDialog
                     open={open}

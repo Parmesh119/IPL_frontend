@@ -43,6 +43,8 @@ import {
     getAllTeams,
 } from "@/lib/actions";
 
+import { useTheme } from '@/components/theme-provider';
+
 // Define the Route
 export const Route = createFileRoute('/app/players/')({
     component: PlayerComponent,
@@ -51,7 +53,7 @@ export const Route = createFileRoute('/app/players/')({
 // --- Constants ---
 const DEFAULT_PAGE_SIZE = 10;
 const ROLES = ["Batsman", "Bowler", "Wicketkeeper", "All-rounder"];
-const STATUSES = ["Pending", "Sold", "Unsold"];
+const STATUSES = ["Pending", "Sold", "Unsold", "Current_Bid"];
 const BATTING_STYLES = ["Right-handed", "Left-handed"];
 const BOWLING_STYLES = ["Fast", "Spin", "Medium"];
 
@@ -107,13 +109,7 @@ function PlayerComponent() {
             selectedStatuses,
         ],
         queryFn: async (): Promise<Player[]> => { // Return Promise<Player[]>
-            const fetchSize = pagination.pageSize + 1;
-            console.log("Fetching players with filters (fetching N+1):", {
-                page: pagination.pageIndex + 1, size: fetchSize, // Use fetchSize
-                search: debouncedSearch || null,
-                roles: selectedRoles.length > 0 ? selectedRoles : null,
-                status: selectedStatuses.length > 0 ? selectedStatuses : null,
-            });
+            const fetchSize = pagination.pageSize;
 
             const filters: ListUserRequest = {
                 page: pagination.pageIndex + 1,
@@ -175,7 +171,7 @@ function PlayerComponent() {
 
     // --- Logic for Workaround Pagination ---
     // Check if there are more items than the page size (indicates a next page)
-    const hasNextPage = useMemo(() => fetchedPlayersList.length > pagination.pageSize, [fetchedPlayersList, pagination.pageSize]);
+    const hasNextPage = useMemo(() => fetchedPlayersList.length >= pagination.pageSize, [fetchedPlayersList, pagination.pageSize]);
     // Data to actually display (only up to pageSize items)
     const playersData = useMemo(() => fetchedPlayersList.slice(0, pagination.pageSize), [fetchedPlayersList, pagination.pageSize]);
     // We don't know the real total count or page count anymore
@@ -226,23 +222,25 @@ function PlayerComponent() {
     // --- Render Logic ---
     if (isLoadingTeams) { return (<div className='flex items-center justify-center h-screen'> <LoaderCircle className="mr-2 h-6 w-6 animate-spin" /> <span className="text-lg">Loading essential data...</span> </div>); }
 
+    const {theme} = useTheme()
+
     return (
         <SidebarInset className="w-full lg:m-2 sm:m-6 flex flex-col h-full">
             {/* Header */}
-            <header className="flex flex-col sm:flex-row h-auto sm:h-16 shrink-0 items-center justify-between gap-2 border-b p-4 bg-card">
+            <header className={`flex flex-col sm:flex-row h-auto sm:h-16 shrink-0 items-center justify-between gap-2 border-b p-4 ${theme === "dark" ? "bg-black" : "bg-white"} `}>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <SidebarTrigger className="-ml-1 lg:hidden" /> <Separator orientation="vertical" className="mx-2 h-6 hidden lg:block" />
+                    <SidebarTrigger className="-ml-1" /> <Separator orientation="vertical" className="mx-2 h-6" />
                     <Breadcrumb> <BreadcrumbList className='tracking-wider text-sm sm:text-base'> <BreadcrumbItem> <Link to="/app/players" className="transition-colors hover:text-foreground"><BreadcrumbLink>Players</BreadcrumbLink></Link> </BreadcrumbItem> <BreadcrumbSeparator /> <BreadcrumbItem> <BreadcrumbPage>List</BreadcrumbPage> </BreadcrumbItem> </BreadcrumbList> </Breadcrumb>
                 </div>
-                <AddPlayerDialog open={openAddDialog} setOpen={setOpenAddDialog} newPlayer={newPlayer as Player} setNewPlayer={setNewPlayer as (player: Player) => void} teams={safeTeams} roles={ROLES} battingStyles={BATTING_STYLES} bowlingStyles={BOWLING_STYLES} handleAddPlayer={handleAddPlayerSubmit} handleCancelAdd={handleCancelAdd} isLoading={isAddingPlayer} />
+                <AddPlayerDialog open={openAddDialog} setOpen={setOpenAddDialog} newPlayer={newPlayer as Player} setNewPlayer={setNewPlayer as (player: Player) => void} teams={safeTeams} roles={ROLES} battingStyles={BATTING_STYLES} bowlingStyles={BOWLING_STYLES} handleAddPlayer={handleAddPlayerSubmit} handleCancelAdd={handleCancelAdd} />
             </header>
 
             {/* Filter Controls */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-b shrink-0 bg-card">
+            <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-b shrink-0 ${theme === "dark" ? "bg-black" : "bg-white"}`}>
                 <Input placeholder="Filter by player name..." value={searchTerm} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)} className="max-w-xs w-full sm:w-auto" />
                 <div className="flex gap-2 flex-wrap justify-start sm:justify-end w-full sm:w-auto">
-                    <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-2" /> Role {selectedRoles.length > 0 ? `(${selectedRoles.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="end">{ROLES.map((role) => (<DropdownMenuCheckboxItem key={role} checked={selectedRoles.includes(role)} onCheckedChange={() => toggleRole(role)} onSelect={(e) => e.preventDefault()}>{role}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
-                    <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto"><Plus className="h-4 w-4 mr-2" /> Status {selectedStatuses.length > 0 ? `(${selectedStatuses.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="end">{STATUSES.map((status) => (<DropdownMenuCheckboxItem key={status} checked={selectedStatuses.includes(status)} onCheckedChange={() => toggleStatus(status)} onSelect={(e) => e.preventDefault()}>{status}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
+                    <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto cursor-pointer"><Plus className="h-4 w-4 mr-2" /> Role {selectedRoles.length > 0 ? `(${selectedRoles.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="end">{ROLES.map((role) => (<DropdownMenuCheckboxItem className={`cursor-pointer`} key={role} checked={selectedRoles.includes(role)} onCheckedChange={() => toggleRole(role)} onSelect={(e) => e.preventDefault()}>{role}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
+                    <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto cursor-pointer"><Plus className="h-4 w-4 mr-2" /> Status {selectedStatuses.length > 0 ? `(${selectedStatuses.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="end">{STATUSES.map((status) => (<DropdownMenuCheckboxItem className='cursor-pointer' key={status} checked={selectedStatuses.includes(status)} onCheckedChange={() => toggleStatus(status)} onSelect={(e) => e.preventDefault()}>{status}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
                 </div>
             </div>
 
@@ -261,12 +259,10 @@ function PlayerComponent() {
                                 <TableHead className="px-4 py-3 whitespace-nowrap w-[150px]">Name</TableHead>
                                 <TableHead className="px-4 py-3 whitespace-nowrap w-[120px]">Country</TableHead>
                                 <TableHead className="px-4 py-3 whitespace-nowrap w-[120px]">IPL Team</TableHead>
-                                <TableHead className="px-4 py-3 whitespace-nowrap w-[80px]">Age</TableHead>
+                                <TableHead className="px-4 py-3 whitespace-nowrap w-[80px]">Base Price</TableHead>
                                 <TableHead className="px-4 py-3 whitespace-nowrap w-[130px]">Role</TableHead>
                                 <TableHead className="px-4 py-3 whitespace-nowrap w-[150px]">Team</TableHead>
                                 <TableHead className="px-4 py-3 whitespace-nowrap w-[100px]">Status</TableHead>
-                                <TableHead className="px-4 py-3 whitespace-nowrap w-[120px]">Batting</TableHead>
-                                <TableHead className="px-4 py-3 whitespace-nowrap w-[120px]">Bowling</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -274,16 +270,14 @@ function PlayerComponent() {
                             {!isLoadingPlayers && !errorPlayers && playersData.length > 0 ? (
                                 playersData.map((player, index) => (
                                     <TableRow key={index} className="hover:bg-muted/40 cursor-pointer transition-colors duration-150" onClick={() => handleRowClick(player.id)} tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleRowClick(player.id) }} >
-                                        <TableCell className="font-medium px-4 py-2">{index + 1}</TableCell>
+                                        <TableCell className="font-medium px-4 py-2">{index + 1 + (pagination.pageIndex) * DEFAULT_PAGE_SIZE}</TableCell>
                                         <TableCell className="font-medium px-4 py-2">{player.name || 'N/A'}</TableCell>
                                         <TableCell className="px-4 py-2">{player.country || 'N/A'}</TableCell>
                                         <TableCell className="px-4 py-2">{player.iplTeam || 'N/A'}</TableCell>
-                                        <TableCell className="px-4 py-2">{player.age ?? 'N/A'}</TableCell>
+                                        <TableCell className="px-4 py-2">{player.basePrice ?? 'N/A'}</TableCell>
                                         <TableCell className="px-4 py-2">{player.role || 'N/A'}</TableCell>
                                         <TableCell className="px-4 py-2">{player.teamId}</TableCell>
                                         <TableCell className="px-4 py-2">{player.status || 'N/A'}</TableCell>
-                                        <TableCell className="px-4 py-2">{player.battingStyle || '-'}</TableCell>
-                                        <TableCell className="px-4 py-2">{player.bowlingStyle || '-'}</TableCell>
                                     </TableRow>
                                 ))
                             ) : (
@@ -295,7 +289,7 @@ function PlayerComponent() {
 
                 {/* Pagination Controls (Workaround Logic) */}
                 {/* Show controls only if on page > 0 OR if there's a next page */}
-                {(pagination.pageIndex > 0 || hasNextPage) && (
+                {(pagination.pageIndex >= 0 || hasNextPage) && (
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-2 py-4 mt-4 shrink-0">
                         {/* Display current page number ONLY */}
                         <span className="text-sm text-muted-foreground mb-2 sm:mb-0">

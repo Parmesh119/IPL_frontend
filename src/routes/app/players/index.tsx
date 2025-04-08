@@ -44,6 +44,7 @@ import {
 } from "@/lib/actions";
 
 import { useTheme } from '@/components/theme-provider';
+import { Badge } from '@/components/ui/badge';
 
 // Define the Route
 export const Route = createFileRoute('/app/players/')({
@@ -67,7 +68,7 @@ const IPL_TEAMS = [
     "Punjab Kings",
     "Lucknow Super Giants",
     "Gujarat Titans"
-  ];
+];
 
 // Default empty array for players
 const defaultPlayersData: Player[] = [];
@@ -138,7 +139,7 @@ function PlayerComponent() {
 
             try {
                 const players = await listPlayersAction(filters);
-                
+
                 if (!Array.isArray(players)) {
                     toast.error("Received invalid data structure from server.");
                     return defaultPlayersData; // Return empty array
@@ -241,7 +242,7 @@ function PlayerComponent() {
     // --- Render Logic ---
     if (isLoadingTeams) { return (<div className='flex items-center justify-center h-screen'> <LoaderCircle className="mr-2 h-6 w-6 animate-spin" /> <span className="text-lg">Loading essential data...</span> </div>); }
 
-    const {theme} = useTheme()
+    const { theme } = useTheme()
 
     return (
         <SidebarInset className="w-full lg:m-2 sm:m-6 flex flex-col h-full">
@@ -266,7 +267,7 @@ function PlayerComponent() {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 container mx-auto py-4 px-0 sm:px-4 relative overflow-y-auto">
+            <div className="flex-1 container mx-auto py-4 sm:px-4 relative overflow-y-auto">
                 {/* Loading / Error States */}
                 {(isLoadingPlayers || isFetching) && (<div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10 rounded-md"><LoaderCircle className="mr-2 h-5 w-5 animate-spin" /> Loading Players...</div>)}
                 {errorPlayers && !isLoadingPlayers && (<div className='p-4 mb-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-md'>Error fetching players: {errorPlayers.message}</div>)}
@@ -300,7 +301,22 @@ function PlayerComponent() {
                                         <TableCell className="px-4 py-2">{player.basePrice ? player.sellPrice ?? "-" : "-"}</TableCell>
                                         <TableCell className="px-4 py-2">{player.role || 'N/A'}</TableCell>
                                         <TableCell className="px-4 py-2">{player.teamId ? player.teamId : "-"}</TableCell>
-                                        <TableCell className="px-4 py-2">{player.status || 'N/A'}</TableCell>
+                                        <TableCell className="px-4 py-2">
+                                            <Badge
+                                                className={`px-2 font-bold tracking-wider  text-sm rounded-md ${player.status === "Unsold"
+                                                        ? "bg-red-900 text-red-100"
+                                                        : player.status === "Sold"
+                                                            ? "bg-green-900 text-green-100"
+                                                            : player.status === "Pending"
+                                                                ? "bg-blue-900 text-blue-100"
+                                                                : player.status === "Current_Bid"
+                                                                    ? "bg-yellow-500 text-black"
+                                                                    : "bg-gray-100 text-gray-600"
+                                                    }`}
+                                            >
+                                                {player.status || "Pending"}
+                                            </Badge>
+                                        </TableCell>
                                     </TableRow>
                                 ))
                             ) : (

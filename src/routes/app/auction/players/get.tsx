@@ -129,10 +129,29 @@ function getPlayersAuction() {
   // Ensure fetchPlayer.mutate() is called only once
   useEffect(() => {
     if (!isFetchPlayerCalled.current) {
-      isFetchPlayerCalled.current = true; // Mark as called
+      isFetchPlayerCalled.current = true;
       fetchPlayer.mutate();
     }
   }, [fetchPlayer]);
+
+  useEffect(() => {
+    const disableRefresh = (event: KeyboardEvent) => {
+      // Disable F5 and Ctrl+R
+      if (event.key === "F5" || (event.ctrlKey && event.key === "r")) {
+        event.preventDefault();
+        event.stopPropagation();
+        toast.error("Page refresh is disabled. Use the 'Next Player' button.");
+      }
+    };
+  
+    // Add the event listener for keydown
+    window.addEventListener("keydown", disableRefresh);
+  
+    return () => {
+      // Cleanup the event listener on component unmount
+      window.removeEventListener("keydown", disableRefresh);
+    };
+  }, []);
 
   const handleSaveChanges = () => {
     if (!sellPrice || !selectedTeamId) {

@@ -98,7 +98,7 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({
               <div className="space-y-2">
                 <div className="flex flex-row">
                   <Label className="w-32 sm:w-36">Team :</Label>
-                  <p className="font-semibold">{teamName || "N/A"}</p>
+                  <p className="font-semibold">{teamName || "-"}</p>
                 </div>
                 <div className="flex flex-row">
                   <Label className="w-32 sm:w-36">Base Price :</Label>
@@ -106,7 +106,7 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({
                 </div>
                 <div className="flex flex-row">
                   <Label className="w-32 sm:w-36">Sell Price :</Label>
-                  <p className="font-semibold">{player.sellPrice || "N/A"}</p>
+                  <p className="font-semibold">{player.sellPrice || "-"}</p>
                 </div>
                 <div className="flex flex-row lg:mt-0 mt-4">
                   <Label className="w-32 sm:w-36">Status :</Label>

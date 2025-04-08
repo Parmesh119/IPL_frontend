@@ -154,7 +154,7 @@ export async function deleteTeamAction(id: string): Promise<string> {
 }
 
 // IPL Auction
-export async function getPlayersForAuction(): Promise<Auction[]> {
+export async function getPlayersForAuction(): Promise<Auction | null> {
     const token = await authService.getAccessToken()
     const response = await axios.post(`${getBackendUrl()}/api/auction/get/players`,{}, {
         headers: {
@@ -177,6 +177,16 @@ export async function markPlayerSold(player: Auction): Promise<string> {
 export async function markPlayerUnsold(player: Auction): Promise<string> {
     const token = await authService.getAccessToken()
     const response = await axios.post(`${getBackendUrl()}/api/auction/mark/unsold`, player, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    })
+    return response.data;
+}
+
+export async function changeStatusPlayer(player: Auction): Promise<string> {
+    const token = await authService.getAccessToken()
+    const response = await axios.post(`${getBackendUrl()}/api/auction/update/status`, player, {
         headers: {
             Authorization: `Bearer ${token}`
         }

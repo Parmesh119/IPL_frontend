@@ -162,7 +162,7 @@ function PlayerComponent() {
                     const teamName = player.teamId ? teamMap.get(player.teamId) : undefined;
                     return {
                         ...player,
-                        teamId: teamName || (player.teamId ? `ID: ${player.teamId}` : 'N/A'),
+                        teamId: teamName || (player.teamId ? `ID: ${player.teamId}` : '-'),
                     };
                 });
                 // --- End Map Team Names ---
@@ -297,9 +297,9 @@ function PlayerComponent() {
                                         <TableCell className="px-4 py-2">{player.country || 'N/A'}</TableCell>
                                         <TableCell className="px-4 py-2">{player.iplTeam || 'N/A'}</TableCell>
                                         <TableCell className="px-4 py-2">{player.basePrice ?? 'N/A'}</TableCell>
-                                        <TableCell className="px-4 py-2">{player.basePrice ? player.sellPrice ?? "N / A" : "-"}</TableCell>
+                                        <TableCell className="px-4 py-2">{player.basePrice ? player.sellPrice ?? "-" : "-"}</TableCell>
                                         <TableCell className="px-4 py-2">{player.role || 'N/A'}</TableCell>
-                                        <TableCell className="px-4 py-2">{player.teamId}</TableCell>
+                                        <TableCell className="px-4 py-2">{player.teamId ? player.teamId : "-"}</TableCell>
                                         <TableCell className="px-4 py-2">{player.status || 'N/A'}</TableCell>
                                     </TableRow>
                                 ))

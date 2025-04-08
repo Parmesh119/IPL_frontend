@@ -65,11 +65,12 @@ export function AppSidebar() {
         authService.getUsername().then((storedUsername) => {
             if (storedUsername) {
                 setUsername(storedUsername);
+            } else {
+                profileMutation.mutate();
             }
         });
-
-        profileMutation.mutate();
     }, []);
+    
     const { setTheme, theme } = useTheme()
     const navigate = useNavigate()
 

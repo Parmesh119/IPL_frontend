@@ -45,50 +45,49 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import TeamDetails from "@/components/teams/teamDetails";
+import { useRef } from "react";
+import { changeStatusPlayer } from "@/lib/actions";
 
 export const Route = createFileRoute("/app/auction/players/get")({
   component: getPlayersAuction,
 });
 
 function getPlayersAuction() {
-  const [playersData, setPlayersData] = useState<Auction[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [playerData, setPlayerData] = useState<Auction | null>(null);
   const [loading, setLoading] = useState(false);
-  const [sellPrice, setSellPrice] = useState(""); // State for sell price
-  const [selectedTeamId, setSelectedTeamId] = useState(""); // State for selected team's ID
-  const [isDialogOpen, setIsDialogOpen] = useState(false); // State to control dialog visibility
-  const [isAlertOpen, setIsAlertOpen] = useState(false); // State to control alert dialog visibility
+  const [sellPrice, setSellPrice] = useState("");
+  const [selectedTeamId, setSelectedTeamId] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
 
-  const getPlayer = useMutation({
+  // Ref to track if fetchPlayer.mutate() has already been called
+  const isFetchPlayerCalled = useRef(false);
+
+  const fetchPlayer = useMutation({
     mutationFn: async () => {
-      const players = await getPlayersForAuction();
-      return players || [];
+      const player = await getPlayersForAuction();
+      return player;
     },
     onSuccess: (data) => {
-      setPlayersData(data);
+      setPlayerData(data);
       setLoading(false);
     },
     onError: () => {
-      toast.error("Error while fetching players for auction.");
+      toast.error("Error while fetching player for auction.");
       setLoading(false);
     },
   });
 
-  const { data: team } = useQuery<Team[]>({
-    queryKey: ["players"],
+  const { data: teams } = useQuery<Team[]>({
+    queryKey: ["teams"],
     queryFn: async () => {
-      const players = await getAllTeams();
-      if (!players) {
-        return [];
-      }
-      return players;
+      const teams = await getAllTeams();
+      return teams || [];
     },
   });
 
   const soldMutation = useMutation({
     mutationFn: async (payload: { player: Auction; sellPrice: string; teamId: string }) => {
-
       await markPlayerSold({
         ...payload.player,
         sellPrice: payload.sellPrice,
@@ -98,8 +97,8 @@ function getPlayersAuction() {
     onSuccess: () => {
       toast.success("Player marked as sold.");
       setIsDialogOpen(false);
-      setLoading(true)
-      getPlayer.mutate();
+      setLoading(true);
+      fetchPlayer.mutate();
     },
     onError: (error: any) => {
       const errorMessage = error.response?.data || "Error while marking player as sold.";
@@ -119,17 +118,21 @@ function getPlayersAuction() {
     onSuccess: () => {
       toast.success("Player marked as unsold.");
       setIsAlertOpen(false);
-      setLoading(true)
-      getPlayer.mutate();
+      setLoading(true);
+      fetchPlayer.mutate();
     },
     onError: () => {
       toast.error("Error while marking player as unsold.");
     },
   });
 
+  // Ensure fetchPlayer.mutate() is called only once
   useEffect(() => {
-    getPlayer.mutate();
-  }, []);
+    if (!isFetchPlayerCalled.current) {
+      isFetchPlayerCalled.current = true; // Mark as called
+      fetchPlayer.mutate();
+    }
+  }, [fetchPlayer]);
 
   const handleSaveChanges = () => {
     if (!sellPrice || !selectedTeamId) {
@@ -139,7 +142,7 @@ function getPlayersAuction() {
 
     const sanitizedSellPrice = parseInt(sellPrice.replace(/[^0-9]/g, ""), 10);
     const sanitizedBasePrice = parseInt(
-      playersData[currentIndex].basePrice.toString().replace(/[^0-9]/g, ""),
+      playerData?.basePrice.toString().replace(/[^0-9]/g, "") || "0",
       10
     );
 
@@ -154,7 +157,7 @@ function getPlayersAuction() {
     }
 
     const payload = {
-      player: playersData[currentIndex],
+      player: playerData!,
       sellPrice,
       teamId: selectedTeamId,
     };
@@ -163,16 +166,23 @@ function getPlayersAuction() {
   };
 
   const handleMarkUnsold = () => {
-    const player = playersData[currentIndex];
+    if (!playerData) return;
     unsoldMutation.mutate({
-      ...player,
+      ...playerData,
       status: "Unsold",
     });
   };
 
+  const changeStatus = useMutation({
+    mutationFn: async (player: Auction) => {
+      await changeStatusPlayer(player);
+    },
+  });
+
   const handleNextPlayer = () => {
+    changeStatus.mutate(playerData!);
     setLoading(true);
-    getPlayer.mutate();
+    fetchPlayer.mutate();
   };
 
   return (
@@ -201,9 +211,8 @@ function getPlayersAuction() {
         </header>
         <Separator className="mb-4" />
 
-
         <div className="w-full min-h-200 m-auto flex flex-col items-center justify-center bg-background text-foreground px-8 py-12">
-          {playersData.length > 0 ? (
+          {playerData ? (
             <div className="w-full h-full border border-border rounded-xl p-8 shadow-lg bg-card tracking-wider">
               <h1 className="text-3xl font-bold text-primary mb-6 text-center">
                 Player Information
@@ -223,22 +232,15 @@ function getPlayersAuction() {
                     <h2 className="text-xl font-semibold mb-2 border-b border-border pb-2">
                       Personal Details
                     </h2>
-                    {playersData[currentIndex].name && (
-                      <p>
-                        <strong>Name:</strong> {playersData[currentIndex].name}
-                      </p>
-                    )}
-                    {playersData[currentIndex].country && (
-                      <p>
-                        <strong>Country:</strong>{" "}
-                        {playersData[currentIndex].country}
-                      </p>
-                    )}
-                    {playersData[currentIndex].role && (
-                      <p>
-                        <strong>Role:</strong> {playersData[currentIndex].role}
-                      </p>
-                    )}
+                    <p>
+                      <strong>Name:</strong> {playerData.name}
+                    </p>
+                    <p>
+                      <strong>Country:</strong> {playerData.country}
+                    </p>
+                    <p>
+                      <strong>Role:</strong> {playerData.role}
+                    </p>
                   </div>
 
                   {/* IPL Details */}
@@ -246,31 +248,23 @@ function getPlayersAuction() {
                     <h2 className="text-xl font-semibold mb-2 border-b border-border pb-2">
                       IPL Information
                     </h2>
-                    {playersData[currentIndex].iplTeam && (
-                      <p>
-                        <strong>IPL Team:</strong>{" "}
-                        {playersData[currentIndex].iplTeam || ""}
-                      </p>
-                    )}
-                    {playersData[currentIndex].basePrice && (
-                      <p>
-                        <strong>Base Price:</strong>{" "}
-                        {playersData[currentIndex].basePrice}
-                      </p>
-                    )}
-                    {playersData[currentIndex].status && (
-                      <p>
-                        <strong>Status:</strong>
-                        <span
-                          className={`ml-2 px-4 py-1 rounded-lg text-white text-md font-semibold ${playersData[currentIndex].status === "Sold"
-                            ? "bg-green-500"
-                            : "bg-red-500"
-                            }`}
-                        >
-                          {playersData[currentIndex].status}
-                        </span>
-                      </p>
-                    )}
+                    <p>
+                      <strong>Base Price:</strong> {playerData.basePrice}
+                    </p>
+                    <p>
+                      <strong>IPL Team:</strong> {playerData.iplTeam}
+                    </p>
+                    <p>
+                      <strong>Status:</strong>
+                      <span
+                        className={`ml-2 px-4 py-1 rounded-lg text-white text-md font-semibold ${playerData.status === "Sold"
+                          ? "bg-green-500"
+                          : "bg-red-500"
+                          }`}
+                      >
+                        {playerData.status}
+                      </span>
+                    </p>
                   </div>
                 </div>
               )}
@@ -310,7 +304,7 @@ function getPlayersAuction() {
                         <Select
                           onValueChange={(value) =>
                             setSelectedTeamId(
-                              team?.find((t) => t.name === value)?.id || ""
+                              teams?.find((t) => t.name === value)?.id || ""
                             )
                           } // Update selected team's ID
                         >
@@ -318,7 +312,7 @@ function getPlayersAuction() {
                             <SelectValue placeholder="Select Team" />
                           </SelectTrigger>
                           <SelectContent>
-                            {team?.map((teamItem) => (
+                            {teams?.map((teamItem) => (
                               <SelectItem
                                 key={teamItem.id}
                                 value={teamItem.name}
@@ -365,7 +359,7 @@ function getPlayersAuction() {
                 <Button
                   variant="outline"
                   onClick={handleNextPlayer}
-                  disabled={loading || playersData.length === 0 || playersData[currentIndex].status === "Currnet_Bid"}
+                  disabled={loading || !playerData}
                   className="cursor-pointer border-primary text-primary text-lg font-semibold px-6 py-3 rounded-lg"
                 >
                   Next Player →

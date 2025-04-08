@@ -133,7 +133,7 @@ export default function TeamDetails({ teamId }: { teamId: string }) {
         playersBought: team?.playersBought?.map((player, index) => ({
             srNo: index + 1,
             player: player.player ?? 'Unknown Player',
-            iplTeam: player.iplTeam ?? 'N/A',
+            iplTeam: player.iplTeam ?? '-',
             role: player.role ?? 'Unknown',
             price: player.price ?? 0,
         })) || [],

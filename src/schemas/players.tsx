@@ -8,11 +8,11 @@ export const PlayerSchema = z.object({
   role: z.string().min(1, { message: "Role is required" }),
   battingStyle: z.string().min(1, { message: "Batting Style is required" }),
   bowlingStyle: z.string().optional(),
-  teamId: z.string().optional().default("-"),
-  basePrice: z.string().min(1, { message: "Base Price is required" }),
-  sellPrice: z.string().nullable().optional(),
+  teamId: z.string().optional(),
+  basePrice: z.number().min(1, { message: "Base Price is required" }),
+  sellPrice: z.number().nullable().optional(),
   iplTeam: z.string().min(1, { message: "IPL Team is required" }),
-  status: z.enum(["Pending", "Sold", "Unsold"]),
+  status: z.enum(["Pending", "Sold", "Unsold", "Current_Bid"]),
 });
 
 export type Player = z.infer<typeof PlayerSchema>;

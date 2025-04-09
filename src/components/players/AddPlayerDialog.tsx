@@ -196,13 +196,14 @@ const AddPlayerDialog: React.FC<AddPlayerDialogProps> = ({
                         <Label htmlFor="basePrice" className="text-right">
                             Base Price
                         </Label>
-                        <Input id="basePrice" placeholder="Base Price" type="text" name="basePrice" value={newPlayer.basePrice} onChange={handleInputChange} className="col-span-3" />
+                        <Input id="basePrice" placeholder="Base Price" type="number" name="basePrice" value={newPlayer.basePrice} onChange={handleInputChange} className="col-span-3" />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
+
                         <Label htmlFor="sellPrice" className="text-right">
                             Sell Price
                         </Label>
-                        <Input id="sellPrice" placeholder="Sell Price" type="text" name="sellPrice" value={newPlayer.sellPrice || ""} onChange={handleInputChange} className="col-span-3" />
+                        <Input id="sellPrice" placeholder="Sell Price" type="number" name="sellPrice" value={newPlayer.sellPrice || ""} onChange={handleInputChange} className="col-span-3" />
                     </div>
                 </div>
                 <DialogFooter>

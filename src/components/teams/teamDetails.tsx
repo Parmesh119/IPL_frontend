@@ -133,7 +133,7 @@ export default function TeamDetails({ teamId }: { teamId: string }) {
         playersBought: team?.playersBought?.map((player, index) => ({
             srNo: index + 1,
             player: player.player ?? 'Unknown Player',
-            iplTeam: player.iplTeam ?? '-',
+            iplTeam: player.iplTeam ?? 'Unknown Team',
             role: player.role ?? 'Unknown',
             price: player.price ?? 0,
         })) || [],
@@ -284,7 +284,7 @@ export default function TeamDetails({ teamId }: { teamId: string }) {
                                                             {player.role}
                                                         </span>
                                                     </TableCell>
-                                                    <TableCell className="py-1 px-2 sm:py-2 sm:px-4 text-right text-xs sm:text-sm">{player.price}</TableCell>
+                                                    <TableCell className="py-1 px-2 sm:py-2 sm:px-4 text-right text-xs sm:text-sm">{player.price + " Cr"}</TableCell>
                                                 </TableRow>
                                             ))
                                         ) : (

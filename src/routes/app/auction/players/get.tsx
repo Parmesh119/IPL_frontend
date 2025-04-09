@@ -53,12 +53,13 @@ export const Route = createFileRoute("/app/auction/players/get")({
 });
 
 function getPlayersAuction() {
-  const [playerData, setPlayerData] = useState<Auction | null>(null);
+  const [playerData, setPlayerData] = useState<Auction>();
   const [loading, setLoading] = useState(false);
-  const [sellPrice, setSellPrice] = useState("");
+  const [sellPrice, setSellPrice] = useState(0.0);
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isPlayer, setIsPlayer] = useState(false);
 
   // Ref to track if fetchPlayer.mutate() has already been called
   const isFetchPlayerCalled = useRef(false);
@@ -69,11 +70,15 @@ function getPlayersAuction() {
       return player;
     },
     onSuccess: (data) => {
+      setIsPlayer(true);
       setPlayerData(data);
       setLoading(false);
     },
-    onError: () => {
-      toast.error("Error while fetching player for auction.");
+    onError: (error: any) => {
+      setIsPlayer(false);
+      const errorMessage = error.response?.data?.error || "Error while fetching player for auction.";
+      setPlayerData(undefined)
+      toast.error(errorMessage);
       setLoading(false);
     },
   });
@@ -87,7 +92,7 @@ function getPlayersAuction() {
   });
 
   const soldMutation = useMutation({
-    mutationFn: async (payload: { player: Auction; sellPrice: string; teamId: string }) => {
+    mutationFn: async (payload: { player: Auction; sellPrice: number; teamId: string }) => {
       await markPlayerSold({
         ...payload.player,
         sellPrice: payload.sellPrice,
@@ -143,10 +148,10 @@ function getPlayersAuction() {
         toast.error("Page refresh is disabled. Use the 'Next Player' button.");
       }
     };
-  
+
     // Add the event listener for keydown
     window.addEventListener("keydown", disableRefresh);
-  
+
     return () => {
       // Cleanup the event listener on component unmount
       window.removeEventListener("keydown", disableRefresh);
@@ -159,7 +164,7 @@ function getPlayersAuction() {
       return;
     }
 
-    const sanitizedSellPrice = parseInt(sellPrice.replace(/[^0-9]/g, ""), 10);
+    const sanitizedSellPrice = parseInt(sellPrice.toString().replace(/[^0-9]/g, ""), 10);
     const sanitizedBasePrice = parseInt(
       playerData?.basePrice.toString().replace(/[^0-9]/g, "") || "0",
       10
@@ -232,160 +237,163 @@ function getPlayersAuction() {
 
         <div className="w-full min-h-200 m-auto flex flex-col items-center justify-center bg-background text-foreground px-8 py-12">
           {playerData ? (
-            <div className="w-full h-full border border-border rounded-xl p-8 shadow-lg bg-card tracking-wider">
-              <h1 className="text-3xl font-bold text-primary mb-6 text-center">
-                Player Information
-              </h1>
+            isPlayer ? (
+              <div className="w-full h-full border border-border rounded-xl p-8 shadow-lg bg-card tracking-wider">
+                <h1 className="text-3xl font-bold text-primary mb-6 text-center">
+                  Player Information
+                </h1>
 
-              {loading ? (
-                <div className="flex flex-col items-center mt-8">
-                  <LoaderCircle className="animate-spin w-14 h-14 text-primary" />
-                  <p className="mt-4 text-lg text-muted-foreground">
-                    Loading next player...
-                  </p>
-                </div>
-              ) : (
-                <div className="flex justify-between gap-8 text-lg">
-                  {/* Player Details */}
-                  <div className="w-1/2 space-y-2">
-                    <h2 className="text-xl font-semibold mb-2 border-b border-border pb-2">
-                      Personal Details
-                    </h2>
-                    <p>
-                      <strong>Name:</strong> {playerData.name}
-                    </p>
-                    <p>
-                      <strong>Country:</strong> {playerData.country}
-                    </p>
-                    <p>
-                      <strong>Role:</strong> {playerData.role}
+                {loading ? (
+                  <div className="flex flex-col items-center mt-8">
+                    <LoaderCircle className="animate-spin w-14 h-14 text-primary" />
+                    <p className="mt-4 text-lg text-muted-foreground">
+                      Loading next player...
                     </p>
                   </div>
-
-                  {/* IPL Details */}
-                  <div className="w-1/2 space-y-2">
-                    <h2 className="text-xl font-semibold mb-2 border-b border-border pb-2">
-                      IPL Information
-                    </h2>
-                    <p>
-                      <strong>Base Price:</strong> {playerData.basePrice}
-                    </p>
-                    <p>
-                      <strong>IPL Team:</strong> {playerData.iplTeam}
-                    </p>
-                    <p>
-                      <strong>Status:</strong>
-                      <span
-                        className={`ml-2 px-4 py-1 rounded-lg text-white text-md font-semibold ${playerData.status === "Sold"
-                          ? "bg-green-500"
-                          : "bg-red-500"
-                          }`}
-                      >
-                        {playerData.status}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="mt-8 flex justify-center gap-6">
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-blue-600 cursor-pointer hover:bg-gray-700 text-white text-lg font-semibold px-4 py-4 rounded-md">
-                      Sell Player
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle>Mark Player As Sold</DialogTitle>
-                      <DialogDescription>
-                        Make changes to Player. Click save when you're done.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="sellPrice" className="text-right">
-                          Sell Price
-                        </Label>
-                        <Input
-                          id="sellPrice"
-                          placeholder="Sell Price"
-                          className="col-span-3"
-                          value={sellPrice}
-                          onChange={(e) => setSellPrice(e.target.value)} // Update sell price
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="team" className="text-right">
-                          Team
-                        </Label>
-                        <Select
-                          onValueChange={(value) =>
-                            setSelectedTeamId(
-                              teams?.find((t) => t.name === value)?.id || ""
-                            )
-                          } // Update selected team's ID
-                        >
-                          <SelectTrigger id="team" className="col-span-3">
-                            <SelectValue placeholder="Select Team" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {teams?.map((teamItem) => (
-                              <SelectItem
-                                key={teamItem.id}
-                                value={teamItem.name}
-                              >
-                                {teamItem.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                ) : (
+                  <div className="flex justify-between gap-8 text-lg">
+                    {/* Player Details */}
+                    <div className="w-1/2 space-y-2">
+                      <h2 className="text-xl font-semibold mb-2 border-b border-border pb-2">
+                        Personal Details
+                      </h2>
+                      <p>
+                        <strong>Name:</strong> {playerData.name}
+                      </p>
+                      <p>
+                        <strong>Country:</strong> {playerData.country}
+                      </p>
+                      <p>
+                        <strong>Role:</strong> {playerData.role}
+                      </p>
                     </div>
-                    <DialogFooter>
-                      <Button className="cursor-pointer" onClick={handleSaveChanges}>Save changes</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
 
-                {/* Alert Dialog for Mark as Unsold */}
-                <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      className="hover:bg-gray-700 cursor-pointer text-white text-lg font-semibold px-4 py-4 rounded-md"
-                    >
-                      Mark as Unsold
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Mark Player as Unsold</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to mark this player as unsold? This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleMarkUnsold}>
-                        Final Mark as Unsold
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                    {/* IPL Details */}
+                    <div className="w-1/2 space-y-2">
+                      <h2 className="text-xl font-semibold mb-2 border-b border-border pb-2">
+                        IPL Information
+                      </h2>
+                      <p>
+                        <strong>Base Price:</strong> {playerData.basePrice + " Cr"}
+                      </p>
+                      <p>
+                        <strong>IPL Team:</strong> {playerData.iplTeam}
+                      </p>
+                      <p>
+                        <strong>Status:</strong>
+                        <span
+                          className={`ml-2 px-4 py-1 rounded-lg text-white text-md font-semibold ${playerData.status === "Sold"
+                            ? "bg-green-500"
+                            : "bg-red-500"
+                            }`}
+                        >
+                          {playerData.status}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                )}
 
-                <Button
-                  variant="outline"
-                  onClick={handleNextPlayer}
-                  disabled={loading || !playerData}
-                  className="cursor-pointer border-primary text-primary text-lg font-semibold px-6 py-3 rounded-lg"
-                >
-                  Next Player →
-                </Button>
+                {/* Action Buttons */}
+                <div className="mt-8 flex justify-center gap-6">
+                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="bg-blue-600 cursor-pointer hover:bg-gray-700 text-white text-lg font-semibold px-4 py-4 rounded-md">
+                        Sell Player
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>Mark Player As Sold</DialogTitle>
+                        <DialogDescription>
+                          Make changes to Player. Click save when you're done.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="sellPrice" className="text-right">
+                            Sell Price
+                          </Label>
+                          <Input
+                            id="sellPrice"
+                            placeholder="Sell Price"
+                            className="col-span-3"
+                            value={sellPrice}
+                            onChange={(e) => setSellPrice(Number(e.target.value))} // Update sell price
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="team" className="text-right">
+                            Team
+                          </Label>
+                          <Select
+                            onValueChange={(value) =>
+                              setSelectedTeamId(
+                                teams?.find((t) => t.name === value)?.id || ""
+                              )
+                            } // Update selected team's ID
+                          >
+                            <SelectTrigger id="team" className="col-span-3">
+                              <SelectValue placeholder="Select Team" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {teams?.map((teamItem) => (
+                                <SelectItem
+                                  key={teamItem.id}
+                                  value={teamItem.name}
+                                >
+                                  {teamItem.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button className="cursor-pointer" onClick={handleSaveChanges}>Save changes</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* Alert Dialog for Mark as Unsold */}
+                  <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        className="hover:bg-gray-700 cursor-pointer text-white text-lg font-semibold px-4 py-4 rounded-md"
+                      >
+                        Mark as Unsold
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Mark Player as Unsold</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to mark this player as unsold? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleMarkUnsold}>
+                          Final Mark as Unsold
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  <Button
+                    variant="outline"
+                    onClick={handleNextPlayer}
+                    disabled={loading || !playerData}
+                    className="cursor-pointer border-primary text-primary text-lg font-semibold px-6 py-3 rounded-lg"
+                  >
+                    Next Player →
+                  </Button>
+                </div>
               </div>
-            </div>
-          ) : (
+            ) : <div className="flex items-center justify-center">
+            No Player Found.
+          </div>) : (
             <div className="flex items-center justify-center">
               No Player Found.
             </div>

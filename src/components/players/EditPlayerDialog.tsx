@@ -129,6 +129,7 @@ const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
         },
         onSuccess: () => {
             toast.success("Player deleted successfully");
+            window.location.href = `/app/players`;
             setOpen(false);
         },
         onError: (error) => {
@@ -139,7 +140,7 @@ const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
 
     const handleDeletePlayer = () => {
         if (editPlayer.teamId != null) {
-            toast.error("Player is part of a team. Please remove the player from the team before deleting.");
+            toast.error("Player is part of a team. Cannot remove the player.");
             handleCancelEdit()
             return;
         }
@@ -259,7 +260,7 @@ const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
                 <DialogFooter className="flex sm:w-full justify-between">
                     <AlertDialog >
                         <AlertDialogTrigger asChild>
-                            <Button variant="destructive" className="cursor-pointer mr-28 w-full lg:w-30 md:w-30">Delete Player</Button>
+                            {/* <Button variant="destructive" className="cursor-pointer mr-28 w-full lg:w-30 md:w-30">Delete Player</Button> */}
                         </AlertDialogTrigger>
                         <AlertDialogContent className="sm:max-w-[700px] tracking-wider border" >
                             <AlertDialogHeader>

@@ -23,7 +23,7 @@ function AuctionRoute() {
     const navigate = useNavigate();
     const { theme } = useTheme();
     
-
+    
 
     return (
         <SidebarInset className="w-full">

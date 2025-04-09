@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { LoaderCircle, Plus } from 'lucide-react';
+import { LoaderCircle, Plus, Upload, Loader, Trash2, SquarePlus } from 'lucide-react';
 import { useDebounce } from "@uidotdev/usehooks";
 import { toast } from "sonner";
+import { uploadFileAction } from "@/lib/actions";
+import { deletePlayerAction } from "@/lib/actions";
 
 // Shadcn UI Components
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -88,11 +90,27 @@ function PlayerComponent() {
     const [openAddDialog, setOpenAddDialog] = useState(false);
     const [newPlayer, setNewPlayer] = useState<Omit<Player, 'id' | 'createdAt' | 'updatedAt'>>({
         name: "", country: "", age: undefined, role: "", battingStyle: "",
-        bowlingStyle: "", teamId: "", basePrice: "", sellPrice: null,
+        bowlingStyle: "", teamId: "", basePrice: 0.0, sellPrice: null,
         iplTeam: "", status: "Pending",
     });
+    const [file, setFile] = useState<File | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+    const [isGlobalSelected, setIsGlobalSelected] = useState(false);
 
     const debouncedSearch = useDebounce(searchTerm, 300);
+
+    const fileUpload = useMutation({
+        mutationFn: async (file: File) => {
+            return await uploadFileAction(file); // Call the action function
+        },
+        onSuccess: () => {
+            window.location.reload()
+        },
+        onError: (error: any) => {
+            toast.error(`Error uploading file: ${error.response?.data?.error || error.message}`);
+        },
+    });
 
     // --- Data Fetching: Teams ---
     const { data: teamsData, isLoading: isLoadingTeams, error: errorTeams } = useQuery({
@@ -100,31 +118,24 @@ function PlayerComponent() {
         queryFn: getAllTeams,
         staleTime: 5 * 60 * 1000,
     });
-    const safeTeams = useMemo(() => Array.isArray(teamsData) ? teamsData : [], [teamsData]);
 
-    if (errorTeams) {
-        return (<div className='p-4 m-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-md'> Error loading essential team data: {errorTeams.message}. Cannot manage players effectively. Please try reloading. </div>);
-    }
-
-    // --- Data Fetching: Players (Workaround for missing totalCount) ---
     const {
-        data: fetchedPlayersList = defaultPlayersData, // Expect Player[] directly, provide default
+        data: fetchedPlayersList = defaultPlayersData,
         isLoading: isLoadingPlayers,
         error: errorPlayers,
         isFetching,
-        // isPlaceholderData is less relevant here as we don't know the total pages
-    } = useQuery<Player[], Error>({ // Expect Player[] directly
+    } = useQuery<Player[], Error>({
         queryKey: [
             'playersList',
             pagination.pageIndex,
-            pagination.pageSize, // Still use pageSize in key for consistency
+            pagination.pageSize,
             debouncedSearch,
             selectedRoles,
             selectedStatuses,
             selectIPLTeam,
             selectTeam,
         ],
-        queryFn: async (): Promise<Player[]> => { // Return Promise<Player[]>
+        queryFn: async (): Promise<Player[]> => {
             const fetchSize = pagination.pageSize;
 
             const filters: ListUserRequest = {
@@ -181,33 +192,47 @@ function PlayerComponent() {
         enabled: !isLoadingTeams,
     });
 
-    // --- Logic for Workaround Pagination ---
-    // Check if there are more items than the page size (indicates a next page)
-    const hasNextPage = useMemo(() => fetchedPlayersList.length >= pagination.pageSize, [fetchedPlayersList, pagination.pageSize]);
-    // Data to actually display (only up to pageSize items)
-    const playersData = useMemo(() => fetchedPlayersList.slice(0, pagination.pageSize), [fetchedPlayersList, pagination.pageSize]);
-    // We don't know the real total count or page count anymore
-    // const totalPlayerCount = ???;
-    // const pageCount = ???;
-
-    // --- Add Player Mutation (No changes needed here) ---
     const { mutate: addPlayer, isPending: isAddingPlayer } = useMutation<Player, Error, Player>({
         mutationFn: addPlayerAction,
         onSuccess: (data) => { toast.success(`Player "${data.name}" added successfully`); queryClient.invalidateQueries({ queryKey: ['playersList'] }); setOpenAddDialog(false); handleCancelAdd(); },
         onError: (error) => { toast.error(`Error adding player: ${error.message || "An unknown error occurred"}`); },
     });
 
-    // --- Add Player Dialog Handlers (No changes needed here) ---
-    const handleAddPlayerSubmit = () => { /* ... validation logic ... */
+    const deleteMutation = useMutation({
+        mutationFn: async (id: string) => {
+            const deletedPlayer = await deletePlayerAction(id);
+            return deletedPlayer;
+        },
+        onSuccess: () => {
+            toast.success("Player deleted successfully");
+            window.location.href = `/app/players`;
+        },
+        onError: () => {
+            toast.error(`Error deleting player`);
+            setSelectedPlayers([]);
+        },
+    });
+
+    const safeTeams = useMemo(() => Array.isArray(teamsData) ? teamsData : [], [teamsData]);
+
+    const hasNextPage = useMemo(() => fetchedPlayersList.length >= pagination.pageSize, [fetchedPlayersList, pagination.pageSize]);
+
+    const playersData = useMemo(() => fetchedPlayersList.slice(0, pagination.pageSize), [fetchedPlayersList, pagination.pageSize]);
+
+    if (errorTeams) {
+        return (<div className='p-4 m-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-md'> Error loading essential team data: {errorTeams.message}. Cannot manage players effectively. Please try reloading. </div>);
+    }
+
+    const handleAddPlayerSubmit = () => {
         const selectedTeam = safeTeams.find((team) => team.name === newPlayer.teamId);
-        const playerToValidate = { /* ... prepare data ... */
+        const playerToValidate = {
             ...newPlayer, teamId: selectedTeam?.id,
             age: newPlayer.age === undefined ? undefined : Number(newPlayer.age),
-            sellPrice: newPlayer.sellPrice === "" || newPlayer.sellPrice === null || newPlayer.sellPrice === undefined ? null : String(newPlayer.sellPrice),
-            basePrice: String(newPlayer.basePrice), iplTeam: String(newPlayer.iplTeam), battingStyle: String(newPlayer.battingStyle), role: String(newPlayer.role), country: String(newPlayer.country), status: newPlayer.status ?? "Pending", bowlingStyle: newPlayer.bowlingStyle ? String(newPlayer.bowlingStyle) : undefined,
+            sellPrice: Number(newPlayer.sellPrice) == null ? null : Number(newPlayer.sellPrice),
+            basePrice: Number(newPlayer.basePrice), iplTeam: String(newPlayer.iplTeam), battingStyle: String(newPlayer.battingStyle), role: String(newPlayer.role), country: String(newPlayer.country), status: newPlayer.status ?? "Pending", bowlingStyle: newPlayer.bowlingStyle ? String(newPlayer.bowlingStyle) : undefined,
         };
         const validationResult = PlayerSchema.safeParse(playerToValidate);
-        if (!validationResult.success) { /* ... handle errors ... */
+        if (!validationResult.success) {
             const errorMessages = validationResult.error.errors.map((err) => `${err.path.join('.') || 'field'}: ${err.message}`).join("\n"); toast.error(`Validation failed:\n${errorMessages}`); return;
         }
         if ((validationResult.data.role === "Bowler" || validationResult.data.role === "All-rounder") && !validationResult.data.bowlingStyle) { toast.error("Bowling style is required for Bowlers and All-rounders."); return; }
@@ -215,7 +240,7 @@ function PlayerComponent() {
         addPlayer(validationResult.data as Player);
     };
     const handleCancelAdd = () => { /* ... reset form ... */
-        setOpenAddDialog(false); setNewPlayer({ name: "", country: "", age: undefined, role: "", battingStyle: "", bowlingStyle: "", teamId: "", basePrice: "", sellPrice: null, iplTeam: "", status: "Pending", });
+        setOpenAddDialog(false); setNewPlayer({ name: "", country: "", age: undefined, role: "", battingStyle: "", bowlingStyle: "", teamId: "", basePrice: 0.0, sellPrice: null, iplTeam: "", status: "Pending", });
     };
 
     // --- Filter Toggle Handlers (No changes needed) ---
@@ -244,96 +269,340 @@ function PlayerComponent() {
 
     const { theme } = useTheme()
 
+    // State to track upload status
+
+
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFile = e.target.files?.[0];
+        if (!selectedFile) {
+            toast.error("No file selected.");
+            return;
+        }
+
+        // Validate file type
+        const validTypes = ["text/csv", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"];
+        if (!validTypes.includes(selectedFile.type)) {
+            toast.error("Invalid file type. Please upload a .csv or .xlsx file.");
+            return;
+        }
+
+        setIsUploading(true);
+
+        setTimeout(() => {
+            setIsUploading(false);
+            toast.success(`File "${selectedFile.name}" uploaded successfully.`);
+        }, 2000);
+
+        setFile(selectedFile);
+
+        fileUpload.mutate(selectedFile);
+    };
+
+    const handleGlobalCheckboxChange = (isChecked: boolean) => {
+        setIsGlobalSelected(isChecked);
+        if (isChecked) {
+            const allPlayerIds = playersData.map((player) => player.id);
+            setSelectedPlayers(allPlayerIds.filter((id): id is string => id !== undefined));
+        } else {
+            setSelectedPlayers([]);
+        }
+    };
+
+    const handleRowCheckboxChange = (playerId: string, isChecked: boolean) => {
+        if (isChecked) {
+            setSelectedPlayers((prev) => [...prev, playerId]);
+        } else {
+            setSelectedPlayers((prev) => prev.filter((id) => id !== playerId));
+            setIsGlobalSelected(false);
+        }
+    };
+
+    const handleDeletePlayer = () => {
+        if (isGlobalSelected) {
+            if (!window.confirm("Are you sure you want to delete all selected players?")) {
+                return;
+            }
+
+            selectedPlayers.forEach((playerId) => {
+                deleteMutation.mutate(playerId);
+            });
+
+            setSelectedPlayers([]);
+            setIsGlobalSelected(false);
+        } else {
+            if (newPlayer.teamId !== null) {
+                toast.error("Player is a part of a team. Cannot remove the player")
+                setSelectedPlayers([]);
+                return;
+            }
+            if (selectedPlayers.length === 1) {
+                deleteMutation.mutate(selectedPlayers[0]);
+            } else {
+                toast.error("Please select a single player to delete.");
+            }
+        }
+    };
+
     return (
-        <SidebarInset className="w-full lg:m-2 sm:m-6 flex flex-col h-full">
-            {/* Header */}
+        <SidebarInset className="w-full lg:m-2 sm:m-6 flex flex-col h-full tracking-wider">
             <header className={`flex flex-col sm:flex-row h-auto sm:h-16 shrink-0 items-center justify-between gap-2 border-b p-4 ${theme === "dark" ? "bg-black" : "bg-white"} `}>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <SidebarTrigger className="-ml-1" /> <Separator orientation="vertical" className="mx-2 h-6" />
-                    <Breadcrumb> <BreadcrumbList className='tracking-wider text-sm sm:text-base'> <BreadcrumbItem> <Link to="/app/players" className="transition-colors hover:text-foreground"><BreadcrumbLink>Players</BreadcrumbLink></Link> </BreadcrumbItem> <BreadcrumbSeparator /> <BreadcrumbItem> <BreadcrumbPage>List</BreadcrumbPage> </BreadcrumbItem> </BreadcrumbList> </Breadcrumb>
+                    <SidebarTrigger className="-ml-1" />
+                    <Separator orientation="vertical" className="mx-2 h-6" />
+                    <Breadcrumb>
+                        <BreadcrumbList className="tracking-wider text-sm sm:text-base">
+                            <BreadcrumbItem>
+                                <Link to="/app/players" className="transition-colors hover:text-foreground">
+                                    <BreadcrumbLink>Players</BreadcrumbLink>
+                                </Link>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator />
+                            <BreadcrumbItem>
+                                <BreadcrumbPage>List</BreadcrumbPage>
+                            </BreadcrumbItem>
+                        </BreadcrumbList>
+                    </Breadcrumb>
                 </div>
-                <AddPlayerDialog open={openAddDialog} setOpen={setOpenAddDialog} newPlayer={newPlayer as Player} setNewPlayer={setNewPlayer as (player: Player) => void} teams={safeTeams} roles={ROLES} IPL_TEAMS={IPL_TEAMS} battingStyles={BATTING_STYLES} bowlingStyles={BOWLING_STYLES} handleAddPlayer={handleAddPlayerSubmit} handleCancelAdd={handleCancelAdd} />
+                <div className="flex items-center gap-4">
+                    <Button variant={theme === "dark" ? null : "destructive"} 
+                    className={`cursor-pointer ${theme !== "dark" ? "text-white font-bold" : "bg-destructive text-white font-bold"}`}
+                        disabled={selectedPlayers.length === 0} onClick={() => handleDeletePlayer()}><Trash2 />{isGlobalSelected ? "Delete All" : "Delete Player"}</Button>
+                    <label htmlFor='file_upload' className={`flex flex-row cursor-pointer tracking-wider px-4 py-1 gap-2 text-md rounded-sm ${theme === "dark" ? "!bg-blue-500 text-white" : "bg-white text-black border border-gray-800"}`}>
+                        <Upload className="w-4 h-6" /> Upload
+                    </label>
+                    <input
+                        id="file_upload"
+                        type="file"
+                        accept=".csv, .xlsx"
+                        className="hidden"
+                        onChange={(e) => handleFileUpload(e)}
+                    />
+                    <AddPlayerDialog
+                        open={openAddDialog}
+                        setOpen={setOpenAddDialog}
+                        newPlayer={newPlayer as Player}
+                        setNewPlayer={setNewPlayer as (player: Player) => void}
+                        teams={safeTeams}
+                        roles={ROLES}
+                        IPL_TEAMS={IPL_TEAMS}
+                        battingStyles={BATTING_STYLES}
+                        bowlingStyles={BOWLING_STYLES}
+                        handleAddPlayer={handleAddPlayerSubmit}
+                        handleCancelAdd={handleCancelAdd}
+                    />
+                </div>
             </header>
+
+            {isUploading && (
+                <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50">
+                    <div className="p-6 rounded-md shadow-md border flex flex-col items-center
+                    bg-white text-black border-gray-300
+                    dark:bg-[#0f0f0f] dark:text-white dark:border-white">
+                        <Loader className="animate-spin w-8 h-8 text-blue-500 mb-3" />
+                        <p className="text-base font-medium">Uploading...</p>
+                    </div>
+                </div>
+            )}
+
+
 
             {/* Filter Controls */}
             <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-b shrink-0 ${theme === "dark" ? "bg-black" : "bg-white"}`}>
-                <Input placeholder="Filter by player name..." value={searchTerm} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)} className="w-full sm:w-100" autoFocus />
+                <div className="flex items-center gap-4 w-full sm:w-auto">
+                    <Input
+                        placeholder="Filter by player name..."
+                        value={searchTerm}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                        className="w-full sm:w-100"
+                        autoFocus
+                    />
+
+                </div>
                 <div className="flex gap-2 flex-wrap justify-start sm:justify-end w-full sm:w-auto">
-                    <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto cursor-pointer"><Plus className="h-4 w-4 mr-2" /> Role {selectedRoles.length > 0 ? `(${selectedRoles.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="center" className='w-auto'>{ROLES.map((role) => (<DropdownMenuCheckboxItem className={`cursor-pointer`} key={role} checked={selectedRoles.includes(role)} onCheckedChange={() => toggleRole(role)} onSelect={(e) => e.preventDefault()}>{role}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
-                    <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto cursor-pointer"><Plus className="h-4 w-4 mr-2" /> Status {selectedStatuses.length > 0 ? `(${selectedStatuses.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="center" className='w-auto'>{STATUSES.map((status) => (<DropdownMenuCheckboxItem className='cursor-pointer' key={status} checked={selectedStatuses.includes(status)} onCheckedChange={() => toggleStatus(status)} onSelect={(e) => e.preventDefault()}>{status}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
-                    <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto cursor-pointer"><Plus className="h-4 w-4 mr-2" /> IPL Team {selectIPLTeam.length > 0 ? `(${selectIPLTeam.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="center" className='w-auto'>{IPL_TEAMS.map((iplTeam) => (<DropdownMenuCheckboxItem className='cursor-pointer' key={iplTeam} checked={selectIPLTeam.includes(iplTeam)} onCheckedChange={() => toggleiplTeam(iplTeam)} onSelect={(e) => e.preventDefault()}>{iplTeam}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
-                    <DropdownMenu> <DropdownMenuTrigger asChild><Button variant="outline" className="w-full sm:w-auto cursor-pointer"><Plus className="h-4 w-4 mr-2" /> Team {selectTeam.length > 0 ? `(${selectTeam.length})` : ''}</Button></DropdownMenuTrigger> <DropdownMenuContent align="center" className='w-auto'>{safeTeams.map((team) => (<DropdownMenuCheckboxItem className='cursor-pointer' key={team.id} checked={selectTeam.includes(team.id || "")} onCheckedChange={() => toggleTeam(team.id || "")} onSelect={(e) => e.preventDefault()}>{team.name}</DropdownMenuCheckboxItem>))}</DropdownMenuContent> </DropdownMenu>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="w-full sm:w-auto cursor-pointer">
+                                <Plus className="h-4 w-4 mr-2" /> Role {selectedRoles.length > 0 ? `(${selectedRoles.length})` : ''}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="center" className="w-auto">
+                            {ROLES.map((role) => (
+                                <DropdownMenuCheckboxItem
+                                    className={`cursor-pointer`}
+                                    key={role}
+                                    checked={selectedRoles.includes(role)}
+                                    onCheckedChange={() => toggleRole(role)}
+                                    onSelect={(e) => e.preventDefault()}
+                                >
+                                    {role}
+                                </DropdownMenuCheckboxItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="w-full sm:w-auto cursor-pointer">
+                                <Plus className="h-4 w-4 mr-2" /> Status {selectedStatuses.length > 0 ? `(${selectedStatuses.length})` : ''}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="center" className="w-auto">
+                            {STATUSES.map((status) => (
+                                <DropdownMenuCheckboxItem
+                                    className="cursor-pointer"
+                                    key={status}
+                                    checked={selectedStatuses.includes(status)}
+                                    onCheckedChange={() => toggleStatus(status)}
+                                    onSelect={(e) => e.preventDefault()}
+                                >
+                                    {status}
+                                </DropdownMenuCheckboxItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="w-full sm:w-auto cursor-pointer">
+                                <Plus className="h-4 w-4 mr-2" /> IPL Team {selectIPLTeam.length > 0 ? `(${selectIPLTeam.length})` : ''}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="center" className="w-auto">
+                            {IPL_TEAMS.map((iplTeam) => (
+                                <DropdownMenuCheckboxItem
+                                    className="cursor-pointer"
+                                    key={iplTeam}
+                                    checked={selectIPLTeam.includes(iplTeam)}
+                                    onCheckedChange={() => toggleiplTeam(iplTeam)}
+                                    onSelect={(e) => e.preventDefault()}
+                                >
+                                    {iplTeam}
+                                </DropdownMenuCheckboxItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="w-full sm:w-auto cursor-pointer">
+                                <Plus className="h-4 w-4 mr-2" /> Team {selectTeam.length > 0 ? `(${selectTeam.length})` : ''}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="center" className="w-auto">
+                            {safeTeams.map((team) => (
+                                <DropdownMenuCheckboxItem
+                                    className="cursor-pointer"
+                                    key={team.id}
+                                    checked={selectTeam.includes(team.id || "")}
+                                    onCheckedChange={() => toggleTeam(team.id || "")}
+                                    onSelect={(e) => e.preventDefault()}
+                                >
+                                    {team.name}
+                                </DropdownMenuCheckboxItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 container mx-auto py-4 sm:px-4 relative overflow-y-auto">
+            <div className="flex-1 w-100 lg:w-full mx-auto py-4 sm:px-4 relative overflow-y-auto">
                 {/* Loading / Error States */}
                 {(isLoadingPlayers || isFetching) && (<div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10 rounded-md"><LoaderCircle className="mr-2 h-5 w-5 animate-spin" /> Loading Players...</div>)}
                 {errorPlayers && !isLoadingPlayers && (<div className='p-4 mb-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-md'>Error fetching players: {errorPlayers.message}</div>)}
 
                 {/* Player Table */}
                 <div className="rounded-md border overflow-x-auto">
+
                     <Table>
                         <TableHeader className="bg-muted/50 sticky top-0 z-10">
                             <TableRow>
-                                <TableHead className="px-4 py-3 whitespace-nowrap w-[150px]"> Sr. No.</TableHead>
-                                <TableHead className="px-4 py-3 whitespace-nowrap w-[150px]">Name</TableHead>
-                                <TableHead className="px-4 py-3 whitespace-nowrap w-[120px]">Country</TableHead>
-                                <TableHead className="px-4 py-3 whitespace-nowrap w-[120px]">IPL Team</TableHead>
-                                <TableHead className="px-4 py-3 whitespace-nowrap w-[80px]">Base Price</TableHead>
-                                <TableHead className="px-4 py-3 whitespace-nowrap w-[80px]">Sell Price</TableHead>
-                                <TableHead className="px-4 py-3 whitespace-nowrap w-[130px]">Role</TableHead>
-                                <TableHead className="px-4 py-3 whitespace-nowrap w-[150px]">Team</TableHead>
-                                <TableHead className="px-4 py-3 whitespace-nowrap w-[100px]">Status</TableHead>
+                                <TableHead className="px-4 py-3 text-center w-[50px]">
+                                    <input
+                                        type="checkbox"
+                                        checked={isGlobalSelected}
+                                        onChange={(e) => handleGlobalCheckboxChange(e.target.checked)}
+                                        aria-label="Select all players"
+                                        className="cursor-pointer"
+                                    />
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-center">Sr. No.</TableHead>
+                                <TableHead className="px-4 py-3">Name</TableHead>
+                                <TableHead className="px-4 py-3">Country</TableHead>
+                                <TableHead className="px-4 py-3">IPL Team</TableHead>
+                                <TableHead className="px-4 py-3">Base Price</TableHead>
+                                <TableHead className="px-4 py-3">Sell Price</TableHead>
+                                <TableHead className="px-4 py-3">Role</TableHead>
+                                <TableHead className="px-4 py-3">Team</TableHead>
+                                <TableHead className="px-4 py-3">Status</TableHead>
                             </TableRow>
                         </TableHeader>
-                        <TableBody>
-                            {/* Use playersData (sliced list) */}
-                            {!isLoadingPlayers && !errorPlayers && playersData.length > 0 ? (
-                                playersData.map((player, index) => (
-                                    <TableRow key={index} className="hover:bg-muted/40 cursor-pointer transition-colors duration-150" onClick={() => handleRowClick(player.id)} tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleRowClick(player.id) }} >
-                                        <TableCell className="font-medium px-4 py-2">{index + 1 + (pagination.pageIndex) * DEFAULT_PAGE_SIZE}</TableCell>
-                                        <TableCell className="font-medium px-4 py-2">{player.name || 'N/A'}</TableCell>
-                                        <TableCell className="px-4 py-2">{player.country || 'N/A'}</TableCell>
-                                        <TableCell className="px-4 py-2">{player.iplTeam || 'N/A'}</TableCell>
-                                        <TableCell className="px-4 py-2">{player.basePrice ?? 'N/A'}</TableCell>
-                                        <TableCell className="px-4 py-2">{player.basePrice ? player.sellPrice ?? "-" : "-"}</TableCell>
-                                        <TableCell className="px-4 py-2">{player.role || 'N/A'}</TableCell>
-                                        <TableCell className="px-4 py-2">{player.teamId ? player.teamId : "-"}</TableCell>
-                                        <TableCell className="px-4 py-2">
-                                            <Badge
-                                                className={`px-2 font-bold tracking-wider  text-sm rounded-md ${player.status === "Unsold"
-                                                        ? "bg-red-900 text-red-100"
-                                                        : player.status === "Sold"
-                                                            ? "bg-green-900 text-green-100"
-                                                            : player.status === "Pending"
-                                                                ? "bg-blue-900 text-blue-100"
-                                                                : player.status === "Current_Bid"
-                                                                    ? "bg-yellow-500 text-black"
-                                                                    : "bg-gray-100 text-gray-600"
-                                                    }`}
-                                            >
-                                                {player.status || "Pending"}
-                                            </Badge>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            ) : (
-                                !isLoadingPlayers && !isFetching && !errorPlayers && playersData.length === 0 && (<TableRow><TableCell colSpan={9} className="h-24 text-center text-muted-foreground">No players found matching the criteria.</TableCell></TableRow>)
-                            )}
+                        {playersData.length !== 0 ? (<TableBody>
+                            {playersData.map((player, index) => (
+                                <TableRow
+                                    key={player.id}
+                                    className="hover:bg-muted/40 cursor-pointer transition-colors duration-150"
+                                    onClick={() => handleRowClick(player.id)} // Row click handler
+                                >
+                                    <TableCell
+                                        className="px-4 py-2 text-center"
+                                        onClick={(e) => e.stopPropagation()} // Prevent row click when clicking checkbox
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedPlayers.includes(player.id || "")}
+                                            onChange={(e) => handleRowCheckboxChange(player.id || "", e.target.checked)}
+                                            aria-label={`Select player ${player.name}`}
+                                            className="cursor-pointer"
+                                        />
+                                    </TableCell>
+                                    <TableCell className="font-medium px-4 py-2 text-center">
+                                        {index + 1 + pagination.pageIndex * DEFAULT_PAGE_SIZE}
+                                    </TableCell>
+                                    <TableCell className="font-medium px-4 py-2">{player.name || 'N/A'}</TableCell>
+                                    <TableCell className="px-4 py-2">{player.country || 'N/A'}</TableCell>
+                                    <TableCell className="px-4 py-2">{player.iplTeam || 'N/A'}</TableCell>
+                                    <TableCell className="px-4 py-2">{player.basePrice ?? 'N/A'} Cr</TableCell>
+                                    <TableCell className="px-4 py-2">
+                                        {player.basePrice ? (player.sellPrice ? player.sellPrice + ' Cr' : '-') : '-'}
+                                    </TableCell>
+                                    <TableCell className="px-4 py-2">{player.role || 'N/A'}</TableCell>
+                                    <TableCell className="px-4 py-2">{player.teamId || '-'}</TableCell>
+                                    <TableCell className="px-4 py-2">
+                                        <Badge
+                                            className={`px-2 font-bold tracking-wider text-sm rounded-md ${player.status === 'Unsold'
+                                                ? 'bg-red-900 text-red-100'
+                                                : player.status === 'Sold'
+                                                    ? 'bg-green-900 text-green-100'
+                                                    : player.status === 'Pending'
+                                                        ? 'bg-blue-900 text-blue-100'
+                                                        : player.status === 'Current_Bid'
+                                                            ? 'bg-yellow-500 text-black'
+                                                            : 'bg-gray-100 text-gray-600'
+                                                }`}
+                                        >
+                                            {player.status || 'Pending'}
+                                        </Badge>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
                         </TableBody>
+                        ) : (
+                            <TableBody>
+                                <TableRow>
+                                    <TableCell colSpan={9} className="text-center py-4">
+                                        No players found.
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        )}
                     </Table>
                 </div>
 
-                {/* Pagination Controls (Workaround Logic) */}
-                {/* Show controls only if on page > 0 OR if there's a next page */}
                 {(pagination.pageIndex >= 0 || hasNextPage) && (
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-2 py-4 mt-4 shrink-0">
-                        {/* Display current page number ONLY */}
+
                         <span className="text-sm text-muted-foreground mb-2 sm:mb-0">
                             Page {pagination.pageIndex + 1}
-                            {/* We cannot show total pages or total players accurately */}
+
                         </span>
                         <div className="flex space-x-2">
                             <Button

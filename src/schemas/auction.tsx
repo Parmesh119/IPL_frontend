@@ -8,7 +8,7 @@ export const AuctionSchema = z.object({
     country: z.string().min(1),
     role: z.string().min(1),
     iplTeam: z.string().min(1).optional(),
-    sellPrice: z.string().optional(),
+    sellPrice: z.number().optional(),
     teamId: z.string().optional(),
 });
 

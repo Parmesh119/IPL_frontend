@@ -154,7 +154,7 @@ export async function deleteTeamAction(id: string): Promise<string> {
 }
 
 // IPL Auction
-export async function getPlayersForAuction(): Promise<Auction | null> {
+export async function getPlayersForAuction(): Promise<Auction> {
     const token = await authService.getAccessToken()
     const response = await axios.post(`${getBackendUrl()}/api/auction/get/players`,{}, {
         headers: {
@@ -191,5 +191,20 @@ export async function changeStatusPlayer(player: Auction): Promise<string> {
             Authorization: `Bearer ${token}`
         }
     })
+    return response.data;
+}
+
+export async function uploadFileAction(file: File): Promise<string> {
+    const token = await authService.getAccessToken();
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await axios.post(`${getBackendUrl()}/api/file/upload`, formData, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+
     return response.data;
 }

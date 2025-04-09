@@ -64,8 +64,8 @@ export function DataTable<TData extends { id: string }, TValue>({
         battingStyle: "",
         bowlingStyle: "",
         teamId: "",
-        basePrice: "",
-        sellPrice: "",
+        basePrice: 0.0,
+        sellPrice: 0.0,
         iplTeam: "",
         status: "Pending"
     });
@@ -209,8 +209,8 @@ export function DataTable<TData extends { id: string }, TValue>({
             battingStyle: "",
             bowlingStyle: "",
             teamId: "",
-            basePrice: "",
-            sellPrice: "",
+            basePrice: 0.0,
+            sellPrice: 0.0,
             iplTeam: "",
             status: "Pending",
         });

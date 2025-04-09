@@ -102,11 +102,11 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({
                 </div>
                 <div className="flex flex-row">
                   <Label className="w-32 sm:w-36">Base Price :</Label>
-                  <p className="font-semibold">{player.basePrice}</p>
+                  <p className="font-semibold">{player.basePrice + " Cr"}</p>
                 </div>
                 <div className="flex flex-row">
                   <Label className="w-32 sm:w-36">Sell Price :</Label>
-                  <p className="font-semibold">{player.sellPrice || "-"}</p>
+                  <p className="font-semibold">{player.sellPrice ? player.sellPrice + " Cr" : "-"}</p>
                 </div>
                 <div className="flex flex-row lg:mt-0 mt-4">
                   <Label className="w-32 sm:w-36">Status :</Label>

@@ -131,7 +131,7 @@ export function AppSidebar() {
                             >
                                 <DropdownMenuItem className="cursor-pointer flex items-center space-x-2">
                                     <BadgeCheck className="w-4 h-4" />
-                                    <span>Account</span>
+                                    <Link to="/app/account"><span>Account</span></Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onClick={() => {

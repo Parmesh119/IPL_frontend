@@ -66,14 +66,7 @@ export function DataTable<TData, TValue>({
                     }
                     className="w-full sm:max-w-sm"
                 />
-                <Button
-                    onClick={() => setIsDialogOpen(true)}
-                    className={`border cursor-pointer ${theme === "dark" ? "border-white" : "bg-blue-500 hover:bg-white hover:text-black"}`}
-                >
-                    Add Team
-                </Button>
             </div>
-            <AddTeamDialog isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)} />
             
             {/* Responsive Table */}
             <div className="rounded-md border tracking-wider mt-4 overflow-x-auto">

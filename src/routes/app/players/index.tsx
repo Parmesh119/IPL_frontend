@@ -243,11 +243,10 @@ function PlayerComponent() {
             status: newPlayer.status ?? "Pending",
             bowlingStyle: newPlayer.bowlingStyle ? String(newPlayer.bowlingStyle) : undefined,
         };
-
-        // Validation is now handled inside the dialog component
+        
         addPlayer(playerToValidate as Player);
     };
-    const handleCancelAdd = () => { /* ... reset form ... */
+    const handleCancelAdd = () => { 
         setOpenAddDialog(false); setNewPlayer({ name: "", country: "", age: undefined, role: "", battingStyle: "", bowlingStyle: "", teamId: "", basePrice: 0.0, sellPrice: null, iplTeam: "", status: "Pending", });
     };
 

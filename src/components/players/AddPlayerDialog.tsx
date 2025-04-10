@@ -53,7 +53,7 @@ const AddPlayerDialog: React.FC<AddPlayerDialogProps> = ({
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setNewPlayer((prev: Player) => ({ ...prev, [name]: value }));
-        
+
         // Clear error for this field when user starts typing
         if (validationErrors[name]) {
             setValidationErrors(prev => {
@@ -66,7 +66,7 @@ const AddPlayerDialog: React.FC<AddPlayerDialogProps> = ({
 
     const handleRoleChange = (role: string) => {
         setNewPlayer((prev: Player) => ({ ...prev, role }));
-        
+
         // Clear error for role field
         if (validationErrors.role) {
             setValidationErrors(prev => {
@@ -79,7 +79,7 @@ const AddPlayerDialog: React.FC<AddPlayerDialogProps> = ({
 
     const handleIPLTeamChange = (iplTeam: string) => {
         setNewPlayer((prev: Player) => ({ ...prev, iplTeam }));
-        
+
         // Clear error for iplTeam field
         if (validationErrors.iplTeam) {
             setValidationErrors(prev => {
@@ -92,7 +92,7 @@ const AddPlayerDialog: React.FC<AddPlayerDialogProps> = ({
 
     const handleTeamChange = (teamId: string) => {
         setNewPlayer((prev: Player) => ({ ...prev, teamId }));
-        
+
         // Clear error for teamId field
         if (validationErrors.teamId) {
             setValidationErrors(prev => {
@@ -105,7 +105,7 @@ const AddPlayerDialog: React.FC<AddPlayerDialogProps> = ({
 
     const handleCountryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setNewPlayer((prev: Player) => ({ ...prev, country: e.target.value }));
-        
+
         // Clear error for country field
         if (validationErrors.country) {
             setValidationErrors(prev => {
@@ -119,22 +119,22 @@ const AddPlayerDialog: React.FC<AddPlayerDialogProps> = ({
     const validateAndSubmit = () => {
         const selectedTeam = teams.find((team) => team.name === newPlayer.teamId);
         const playerToValidate = {
-            ...newPlayer, 
+            ...newPlayer,
             teamId: selectedTeam?.id,
             age: newPlayer.age === undefined ? undefined : Number(newPlayer.age),
             sellPrice: Number(newPlayer.sellPrice) == null ? null : Number(newPlayer.sellPrice),
-            basePrice: Number(newPlayer.basePrice), 
-            iplTeam: String(newPlayer.iplTeam), 
-            battingStyle: String(newPlayer.battingStyle), 
-            role: String(newPlayer.role), 
-            country: String(newPlayer.country), 
-            status: newPlayer.status ?? "Pending", 
+            basePrice: Number(newPlayer.basePrice),
+            iplTeam: String(newPlayer.iplTeam),
+            battingStyle: String(newPlayer.battingStyle),
+            role: String(newPlayer.role),
+            country: String(newPlayer.country),
+            status: newPlayer.status ?? "Pending",
             bowlingStyle: newPlayer.bowlingStyle ? String(newPlayer.bowlingStyle) : undefined,
         };
 
         try {
             const validationResult = PlayerSchema.parse(playerToValidate);
-            
+
             // Additional validation for bowling style
             if ((validationResult.role === "Bowler" || validationResult.role === "All-rounder") && !validationResult.bowlingStyle) {
                 setValidationErrors({
@@ -142,7 +142,7 @@ const AddPlayerDialog: React.FC<AddPlayerDialogProps> = ({
                 });
                 return;
             }
-            
+
             // Clear all validation errors and proceed
             setValidationErrors({});
             handleAddPlayer();
@@ -179,13 +179,13 @@ const AddPlayerDialog: React.FC<AddPlayerDialogProps> = ({
                             Name
                         </Label>
                         <div className="col-span-3">
-                            <Input 
-                                id="name" 
-                                placeholder="Player Name" 
-                                autoFocus 
-                                name="name" 
-                                value={newPlayer.name} 
-                                onChange={handleInputChange} 
+                            <Input
+                                id="name"
+                                placeholder="Player Name"
+                                autoFocus
+                                name="name"
+                                value={newPlayer.name}
+                                onChange={handleInputChange}
                                 className={validationErrors.name ? "border-red-500" : ""}
                             />
                             {validationErrors.name && (
@@ -193,18 +193,18 @@ const AddPlayerDialog: React.FC<AddPlayerDialogProps> = ({
                             )}
                         </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-4 items-start gap-4">
                         <Label htmlFor="country" className="text-right pt-2">
                             Country
                         </Label>
                         <div className="col-span-3">
-                            <Input 
-                                id="country" 
-                                placeholder="Country" 
-                                name="country" 
-                                value={newPlayer.country} 
-                                onChange={handleCountryChange} 
+                            <Input
+                                id="country"
+                                placeholder="Country"
+                                name="country"
+                                value={newPlayer.country}
+                                onChange={handleCountryChange}
                                 className={validationErrors.country ? "border-red-500" : ""}
                             />
                             {validationErrors.country && (
@@ -212,14 +212,14 @@ const AddPlayerDialog: React.FC<AddPlayerDialogProps> = ({
                             )}
                         </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-4 items-start gap-4">
                         <Label htmlFor="iplTeam" className="text-right pt-2">
                             IPL Team
                         </Label>
                         <div className="col-span-3">
-                            <Select 
-                                onValueChange={handleIPLTeamChange} 
+                            <Select
+                                onValueChange={handleIPLTeamChange}
                                 defaultValue=""
                             >
                                 <SelectTrigger className={`cursor-pointer ${validationErrors.iplTeam ? "border-red-500" : ""}`}>
@@ -236,14 +236,14 @@ const AddPlayerDialog: React.FC<AddPlayerDialogProps> = ({
                             )}
                         </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-4 items-start gap-4">
                         <Label htmlFor="role" className="text-right pt-2">
                             Role
                         </Label>
                         <div className="col-span-3">
-                            <Select 
-                                onValueChange={handleRoleChange} 
+                            <Select
+                                onValueChange={handleRoleChange}
                                 defaultValue={newPlayer.role}
                             >
                                 <SelectTrigger className={`cursor-pointer ${validationErrors.role ? "border-red-500" : ""}`}>
@@ -260,14 +260,14 @@ const AddPlayerDialog: React.FC<AddPlayerDialogProps> = ({
                             )}
                         </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-4 items-start gap-4">
                         <Label htmlFor="team" className="text-right pt-2">
                             Team
                         </Label>
                         <div className="col-span-3">
-                            <Select 
-                                onValueChange={handleTeamChange} 
+                            <Select
+                                onValueChange={handleTeamChange}
                                 defaultValue={newPlayer.teamId}
                             >
                                 <SelectTrigger className={`cursor-pointer ${validationErrors.teamId ? "border-red-500" : ""}`}>
@@ -284,19 +284,19 @@ const AddPlayerDialog: React.FC<AddPlayerDialogProps> = ({
                             )}
                         </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-4 items-start gap-4">
                         <Label htmlFor="basePrice" className="text-right pt-2">
                             Base Price
                         </Label>
                         <div className="col-span-3">
-                            <Input 
-                                id="basePrice" 
-                                placeholder="Base Price" 
-                                type="number" 
-                                name="basePrice" 
-                                value={newPlayer.basePrice} 
-                                onChange={handleInputChange} 
+                            <Input
+                                id="basePrice"
+                                placeholder="Base Price"
+                                type="number"
+                                name="basePrice"
+                                value={newPlayer.basePrice}
+                                onChange={handleInputChange}
                                 className={validationErrors.basePrice ? "border-red-500" : ""}
                             />
                             {validationErrors.basePrice && (
@@ -304,19 +304,19 @@ const AddPlayerDialog: React.FC<AddPlayerDialogProps> = ({
                             )}
                         </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-4 items-start gap-4">
                         <Label htmlFor="sellPrice" className="text-right pt-2">
                             Sell Price
                         </Label>
                         <div className="col-span-3">
-                            <Input 
-                                id="sellPrice" 
-                                placeholder="Sell Price" 
-                                type="number" 
-                                name="sellPrice" 
-                                value={newPlayer.sellPrice || ""} 
-                                onChange={handleInputChange} 
+                            <Input
+                                id="sellPrice"
+                                placeholder="Sell Price"
+                                type="number"
+                                name="sellPrice"
+                                value={newPlayer.sellPrice || ""}
+                                onChange={handleInputChange}
                                 className={validationErrors.sellPrice ? "border-red-500" : ""}
                             />
                             {validationErrors.sellPrice && (

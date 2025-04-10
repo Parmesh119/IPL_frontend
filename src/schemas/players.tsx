@@ -6,7 +6,7 @@ export const PlayerSchema = z.object({
   country: z.string().min(1, { message: "Country is required" }),
   age: z.number().int().positive({ message: "Age must be a positive integer" }).optional(),
   role: z.string().min(1, { message: "Role is required" }),
-  battingStyle: z.string().min(1, { message: "Batting Style is required" }),
+  battingStyle: z.string().optional(),
   bowlingStyle: z.string().optional(),
   teamId: z.string().optional(),
   basePrice: z.number().min(1, { message: "Base Price is required" }),

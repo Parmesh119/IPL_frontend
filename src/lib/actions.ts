@@ -7,6 +7,7 @@ import { authService } from '@/lib/auth'
 import { toast } from 'sonner'
 import { type Auction } from '@/schemas/auction'
 import { type ListUserRequest } from '@/schemas/players'
+import { type Settings } from '@/schemas/setting'
 
 export function getBackendUrl() {
     const backendUrl = import.meta.env.BACKEND_URL || 'http://localhost:8080'
@@ -206,5 +207,26 @@ export async function uploadFileAction(file: File): Promise<string> {
         },
     });
 
+    return response.data;
+}
+
+// Settings actions
+export async function updateSettingsAction(settings: Settings): Promise<Settings> {
+    const token = await authService.getAccessToken()
+    const response = await axios.post(`${getBackendUrl()}/api/settings/update`, settings, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    })
+    return response.data;
+}
+
+export async function getSettingsAction(): Promise<Settings> {
+    const token = await authService.getAccessToken()
+    const response = await axios.get(`${getBackendUrl()}/api/settings/get`, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    })
     return response.data;
 }

@@ -9,6 +9,7 @@ export const AuctionSchema = z.object({
     role: z.string().min(1),
     iplTeam: z.string().min(1).optional(),
     sellPrice: z.number().optional(),
+    player: z.number().optional(),
     teamId: z.string().optional(),
 });
 

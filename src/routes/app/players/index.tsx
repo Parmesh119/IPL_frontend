@@ -1,11 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { LoaderCircle, Plus, Upload, Loader, Trash2, SquarePlus } from 'lucide-react';
+import { LoaderCircle, Plus, Upload, Loader, Trash2 } from 'lucide-react';
 import { useDebounce } from "@uidotdev/usehooks";
 import { toast } from "sonner";
 import { uploadFileAction } from "@/lib/actions";
 import { deletePlayerAction } from "@/lib/actions";
+import { AlertDialog, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
+import * as XLSX from "xlsx";
 
 // Shadcn UI Components
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -37,7 +39,7 @@ import {
 
 // Custom Components & Actions
 import AddPlayerDialog from '@/components/players/AddPlayerDialog';
-import { type Player, PlayerSchema, type ListUserRequest } from "@/schemas/players";
+import { type Player, type ListUserRequest } from "@/schemas/players";
 import {
     listPlayersAction, // ** Action now returns Promise<Player[]> **
     getTeamById,
@@ -97,6 +99,7 @@ function PlayerComponent() {
     const [isUploading, setIsUploading] = useState(false);
     const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
     const [isGlobalSelected, setIsGlobalSelected] = useState(false);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -224,20 +227,24 @@ function PlayerComponent() {
     }
 
     const handleAddPlayerSubmit = () => {
+        // No validation logic here since we've moved it to the AddPlayerDialog component
         const selectedTeam = safeTeams.find((team) => team.name === newPlayer.teamId);
         const playerToValidate = {
-            ...newPlayer, teamId: selectedTeam?.id,
+            ...newPlayer,
+            teamId: selectedTeam?.id,
             age: newPlayer.age === undefined ? undefined : Number(newPlayer.age),
             sellPrice: Number(newPlayer.sellPrice) == null ? null : Number(newPlayer.sellPrice),
-            basePrice: Number(newPlayer.basePrice), iplTeam: String(newPlayer.iplTeam), battingStyle: String(newPlayer.battingStyle), role: String(newPlayer.role), country: String(newPlayer.country), status: newPlayer.status ?? "Pending", bowlingStyle: newPlayer.bowlingStyle ? String(newPlayer.bowlingStyle) : undefined,
+            basePrice: Number(newPlayer.basePrice),
+            iplTeam: String(newPlayer.iplTeam),
+            battingStyle: String(newPlayer.battingStyle),
+            role: String(newPlayer.role),
+            country: String(newPlayer.country),
+            status: newPlayer.status ?? "Pending",
+            bowlingStyle: newPlayer.bowlingStyle ? String(newPlayer.bowlingStyle) : undefined,
         };
-        const validationResult = PlayerSchema.safeParse(playerToValidate);
-        if (!validationResult.success) {
-            const errorMessages = validationResult.error.errors.map((err) => `${err.path.join('.') || 'field'}: ${err.message}`).join("\n"); toast.error(`Validation failed:\n${errorMessages}`); return;
-        }
-        if ((validationResult.data.role === "Bowler" || validationResult.data.role === "All-rounder") && !validationResult.data.bowlingStyle) { toast.error("Bowling style is required for Bowlers and All-rounders."); return; }
-        if (validationResult.data.role !== "Bowler" && validationResult.data.role !== "All-rounder" && validationResult.data.bowlingStyle) { validationResult.data.bowlingStyle = undefined; }
-        addPlayer(validationResult.data as Player);
+
+        // Validation is now handled inside the dialog component
+        addPlayer(playerToValidate as Player);
     };
     const handleCancelAdd = () => { /* ... reset form ... */
         setOpenAddDialog(false); setNewPlayer({ name: "", country: "", age: undefined, role: "", battingStyle: "", bowlingStyle: "", teamId: "", basePrice: 0.0, sellPrice: null, iplTeam: "", status: "Pending", });
@@ -297,6 +304,36 @@ function PlayerComponent() {
         setFile(selectedFile);
 
         fileUpload.mutate(selectedFile);
+    };
+
+    const handleOpenDialog = () => {
+        setIsDialogOpen(true);
+    };
+
+    const handleCloseDialog = () => {
+        setIsDialogOpen(false);
+    };
+
+    const handleDownloadSampleFile = () => {
+        const sampleData = [
+            ["Name", "Country", "Role", "Base Price", "IPL Team"],
+        ];
+
+        const worksheet = XLSX.utils.aoa_to_sheet(sampleData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Sample");
+
+        const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+        const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "sample.xlsx";
+        link.click();
+
+        URL.revokeObjectURL(url);
+        handleCloseDialog(); // Close the dialog after downloading
     };
 
     const handleGlobalCheckboxChange = (isChecked: boolean) => {
@@ -365,10 +402,13 @@ function PlayerComponent() {
                     </Breadcrumb>
                 </div>
                 <div className="flex items-center gap-4">
-                    <Button variant={theme === "dark" ? null : "destructive"} 
-                    className={`cursor-pointer ${theme !== "dark" ? "text-white font-bold" : "bg-destructive text-white font-bold"}`}
+                    <Button variant={theme === "dark" ? null : "destructive"}
+                        className={`cursor-pointer ${theme !== "dark" ? "text-white font-bold" : "bg-destructive text-white font-bold"}`}
                         disabled={selectedPlayers.length === 0} onClick={() => handleDeletePlayer()}><Trash2 />{isGlobalSelected ? "Delete All" : "Delete Player"}</Button>
-                    <label htmlFor='file_upload' className={`flex flex-row cursor-pointer tracking-wider px-4 py-1 gap-2 text-md rounded-sm ${theme === "dark" ? "!bg-blue-500 text-white" : "bg-white text-black border border-gray-800"}`}>
+                    <label
+                        onClick={handleOpenDialog} // Open the dialog when clicking the Upload button
+                        className={`flex flex-row cursor-pointer tracking-wider px-4 py-1 gap-2 text-md rounded-sm ${theme === "dark" ? "!bg-blue-500 text-white" : "bg-white text-black border border-gray-800"}`}
+                    >
                         <Upload className="w-4 h-6" /> Upload
                     </label>
                     <input
@@ -393,6 +433,45 @@ function PlayerComponent() {
                     />
                 </div>
             </header>
+
+            <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Upload Instructions</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Make sure that all column names in your file match the following format:
+                            <ul className="mt-2 list-disc list-inside">
+                                <li>Name</li>
+                                <li>Country</li>
+                                <li>Role</li>
+                                <li>Base Price</li>
+                                <li>IPL Team</li>
+                            </ul>
+                            <p className="mt-4">
+                                <a
+                                    href="#"
+                                    onClick={handleDownloadSampleFile}
+                                    className="text-blue-500 underline cursor-pointer"
+                                >
+                                    Click here to download a sample Excel file
+                                </a>
+                            </p>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={handleCloseDialog} className='cursor-pointer'>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => {
+                                document.getElementById("file_upload")?.click(); // Trigger file input click
+                                handleCloseDialog();
+                            }}
+                            className='cursor-pointer'
+                        >
+                            OK
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             {isUploading && (
                 <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50">

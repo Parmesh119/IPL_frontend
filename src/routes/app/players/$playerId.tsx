@@ -64,6 +64,8 @@ function RouteComponent() {
     return <div>Player not found</div>;  // Double check, in case useQuery doesn't throw
   }
 
+  const { age, ...filteredPlayer } = player;
+
   return (
     <div className='flex flex-col gap-4 w-full'>
       <SidebarInset className="w-full">
@@ -86,7 +88,7 @@ function RouteComponent() {
         </header>
         <Separator className="mb-4" />
         <PlayerDetails
-          player={player}
+          player={filteredPlayer}
         />
       </SidebarInset>
     </div>

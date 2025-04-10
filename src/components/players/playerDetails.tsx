@@ -11,8 +11,6 @@ interface PlayerDetailsProps {
   player: Player;
   teams: { id: string; name: string }[];
   roles: string[];
-  battingStyles: string[];
-  bowlingStyles: string[];
   handleUpdatePlayer: (updatedPlayer: Player) => void;
 }
 
@@ -20,8 +18,6 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({
   player,
   teams = [],
   roles = ["Batsman", "Bowler", "Wicketkeeper", "All-rounder"],
-  battingStyles = ["Right-handed", "Left-handed"],
-  bowlingStyles = ["Fast", "Spin", "Medium"],
   handleUpdatePlayer
 }) => {
   const { theme } = useTheme();
@@ -82,10 +78,6 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({
                   <p className="font-semibold ">{player.country}</p>
                 </div>
                 <div className="flex flex-row">
-                  <Label className="w-32 sm:w-36">Age :</Label>
-                  <p className="font-semibold">{player.age}</p>
-                </div>
-                <div className="flex flex-row">
                   <Label className="w-32 sm:w-36">Role :</Label>
                   <p className="font-semibold">{player.role}</p>
                 </div>
@@ -123,24 +115,7 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({
                 </div>
               </div>
             </div>
-            {/* Playing Style Section */}
-            <div className="mt-8">
-              <h3 className="font-semibold text-lg mb-4">Playing Style</h3>
-              <div className="space-y-4">
-                <div className="flex flex-row">
-                  <Label className="w-36">Batting Style :</Label>
-                  <p className="font-semibold">{player.battingStyle}</p>
-                </div>
-                <div className="flex flex-row">
-                  <Label className="w-36">Bowling Style :</Label>
-                  <p className="font-semibold">
-                    {(player.role === "All-rounder" || player.role === "Bowler")
-                      ? player.bowlingStyle
-                      : "N/A"}
-                  </p>
-                </div>
-              </div>
-            </div>
+            
             {/* Playing Style Section */}
             <div className="mt-8">
               <h3 className="font-semibold text-lg mb-4">IPL Information</h3>
@@ -164,8 +139,6 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({
         setEditPlayer={setEditingPlayer}
         teams={teams}
         roles={roles}
-        battingStyles={battingStyles}
-        bowlingStyles={bowlingStyles}
         handleEditPlayer={handleEditPlayer}
         handleCancelEdit={handleCancelEdit}
         id={player.id || ""}

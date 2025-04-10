@@ -33,7 +33,6 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useQuery } from '@tanstack/react-query';
 import { getTeamById } from '@/lib/actions';
@@ -131,6 +130,7 @@ export default function TeamDetails({ teamId }: { teamId: string }) {
         bowlersCount: team?.bowlersCount ?? 0,
         allRoundersCount: team?.allRoundersCount ?? 0,
         playersBought: team?.playersBought?.map((player, index) => ({
+            id: player.id,
             srNo: index + 1,
             player: player.player ?? 'Unknown Player',
             iplTeam: player.iplTeam ?? 'Unknown Team',
@@ -214,7 +214,7 @@ export default function TeamDetails({ teamId }: { teamId: string }) {
                         </div>
                         <div>
                             <Label htmlFor="amountSpent" className="text-sm font-medium text-muted-foreground">Amount Spent</Label>
-                            <Input disabled id="amountSpent" type="number" value={teamData.amountSpent} readOnly className="mt-1 font-bold" />
+                            <Input disabled id="amountSpent" type="text" value={`${teamData.amountSpent} Cr`} readOnly className="mt-1 font-bold" />
                         </div>
                         <div>
                             <Label htmlFor="totalPlayers" className="text-sm font-medium text-muted-foreground">Total Players</Label>
@@ -271,7 +271,7 @@ export default function TeamDetails({ teamId }: { teamId: string }) {
                                     <TableBody>
                                         {teamData.playersBought.length > 0 ? (
                                             teamData.playersBought.map((player) => (
-                                                <TableRow key={player.srNo} className="border-b dark:border-neutral-800/50 hover:bg-muted/20">
+                                                <TableRow key={player.srNo} onClick={() => router.navigate({ to: "/app/players/$playerId", params: { playerId: player.id ?? "" } })} className="border-b cursor-pointer dark:border-neutral-800/50 hover:bg-muted/20">
                                                     <TableCell className="py-2 px-2 sm:py-2 sm:px-4 font-medium text-xs sm:text-sm">{player.srNo}</TableCell>
                                                     <TableCell className="py-1 px-1 sm:py-2 sm:px-2 text-xs sm:text-sm">{player.player}</TableCell>
                                                     <TableCell className="py-1 px-1 sm:py-2 sm:px-2 text-xs sm:text-sm">{player.iplTeam}</TableCell>

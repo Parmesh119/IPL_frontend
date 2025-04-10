@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import {
     Dialog,
     DialogContent,
@@ -31,7 +31,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updatePlayerAction } from "@/lib/actions";
 import { toast } from "sonner";
 import { type Team } from "@/schemas/team"; // Adjust path
-import { useRouter, Navigate } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 
 interface EditPlayerDialogProps {
     open: boolean;
@@ -40,8 +40,6 @@ interface EditPlayerDialogProps {
     setEditPlayer: (player: Player) => void;
     teams: any[];
     roles: string[];
-    battingStyles: string[];
-    bowlingStyles: string[];
     handleEditPlayer: () => void
     handleCancelEdit: () => void
     id: string;
@@ -52,11 +50,7 @@ const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
     setOpen,
     editPlayer,
     setEditPlayer,
-    teams,
     roles,
-    battingStyles,
-    bowlingStyles,
-    handleEditPlayer,
     handleCancelEdit,
     id
 
@@ -98,14 +92,6 @@ const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
     const handleTeamChange = (teamId: string) => {
 
         setEditPlayer({ ...editPlayer, teamId });
-    };
-
-    const handleBattingStyleChange = (battingStyle: string) => {
-        setEditPlayer({ ...editPlayer, battingStyle });
-    };
-
-    const handleBowlingStyleChange = (bowlingStyle: string | undefined) => {
-        setEditPlayer({ ...editPlayer, bowlingStyle: bowlingStyle || "" });
     };
 
     const handleIPLTeam = (iplTeam: string) => {
@@ -164,12 +150,6 @@ const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
                         <Input autoFocus id="name" name="name" value={editPlayer.name || ""} onChange={handleInputChange} placeholder="Player Name" className="col-span-3" />
                     </div>
 
-                    {/* Age Field */}
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="age" className="text-right">Age</Label>
-                        <Input id="age" name="age" type="number" value={editPlayer.age || ""} onChange={handleInputChange} placeholder="Age" className="col-span-3" />
-                    </div>
-
                     {/* Country Field */}
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="country" className="text-right">Country</Label>
@@ -211,38 +191,6 @@ const EditPlayerDialog: React.FC<EditPlayerDialogProps> = ({
                             </SelectContent>
                         </Select>
                     </div>
-
-                    {/* Batting Style Dropdown */}
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="battingStyle" className="text-right">Batting Style</Label>
-                        <Select onValueChange={handleBattingStyleChange} defaultValue={editPlayer.battingStyle || ""}>
-                            <SelectTrigger id="battingStyle" className="col-span-3 cursor-pointer">
-                                <SelectValue placeholder="Select Batting Style" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {battingStyles.map(style => (
-                                    <SelectItem key={style} value={style} className="cursor-pointer">{style}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    {/* Bowling Style Dropdown (Conditional) */}
-                    {(editPlayer.role === "Bowler" || editPlayer.role === "All-rounder") && (
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="bowlingStyle" className="text-right">Bowling Style</Label>
-                            <Select onValueChange={handleBowlingStyleChange} defaultValue={editPlayer.bowlingStyle || ""}>
-                                <SelectTrigger id="bowlingStyle" className="col-span-3 cursor-pointer">
-                                    <SelectValue placeholder="Select Bowling Style" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {bowlingStyles.map(style => (
-                                        <SelectItem key={style} value={style} className="cursor-pointer">{style}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    )}
 
                     {/* Base Price Field */}
                     <div className="grid grid-cols-4 items-center gap-4">

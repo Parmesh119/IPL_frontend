@@ -110,6 +110,8 @@ function getPlayersAuction() {
 
       if (errorMessage.includes("Team budget exceeded")) {
         toast.error("Team budget exceeded!!");
+      } else if(errorMessage.includes("Team has reached the maximum number of players.")) {
+        toast.error("Team has reached the maximum number of players!!");
       } else {
         toast.error("Error while marking player as sold.");
       }
@@ -164,25 +166,27 @@ function getPlayersAuction() {
       return;
     }
 
-    const sanitizedSellPrice = parseInt(sellPrice.toString().replace(/[^0-9]/g, ""), 10);
-    const sanitizedBasePrice = parseInt(
-      playerData?.basePrice.toString().replace(/[^0-9]/g, "") || "0",
-      10
+    // Extract numeric value from basePrice (e.g., "1.92 Cr" -> 1.92)
+    const sanitizedBasePrice = parseFloat(
+      playerData?.basePrice.toString().replace(/[^\d.]/g, "") || "0"
     );
+
+    // Ensure sellPrice is a valid number
+    const sanitizedSellPrice = parseFloat(sellPrice.toString());
 
     if (isNaN(sanitizedSellPrice)) {
       toast.error("Sell price must be a valid number.");
       return;
     }
 
-    if (sanitizedBasePrice > sanitizedSellPrice) {
+    if (sanitizedSellPrice < sanitizedBasePrice) {
       toast.error("Sell price cannot be less than base price.");
       return;
     }
 
     const payload = {
       player: playerData!,
-      sellPrice,
+      sellPrice: sanitizedSellPrice,
       teamId: selectedTeamId,
     };
 
@@ -316,6 +320,7 @@ function getPlayersAuction() {
                           </Label>
                           <Input
                             id="sellPrice"
+                            type="number"
                             placeholder="Sell Price"
                             className="col-span-3"
                             value={sellPrice}
@@ -392,8 +397,8 @@ function getPlayersAuction() {
                 </div>
               </div>
             ) : <div className="flex items-center justify-center">
-            No Player Found.
-          </div>) : (
+              No Player Found.
+            </div>) : (
             <div className="flex items-center justify-center">
               No Player Found.
             </div>

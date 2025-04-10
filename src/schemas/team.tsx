@@ -12,6 +12,7 @@ export const TeamSchema = z.object({
 });
 
 const PlayerDTOSchema = z.object({
+  id: z.string().optional(),
   srNo: z.number().default(0),
   player: z.string().default(""),
   iplTeam: z.string().default(""),

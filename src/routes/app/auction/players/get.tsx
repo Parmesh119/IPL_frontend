@@ -47,12 +47,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useRef } from "react";
 import { changeStatusPlayer } from "@/lib/actions";
+import { useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/app/auction/players/get")({
   component: getPlayersAuction,
 });
 
 function getPlayersAuction() {
+  const navigate = useNavigate();
   const [playerData, setPlayerData] = useState<Auction>();
   const [loading, setLoading] = useState(false);
   const [sellPrice, setSellPrice] = useState(0.0);
@@ -60,6 +62,7 @@ function getPlayersAuction() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [isPlayer, setIsPlayer] = useState(false);
+  const [isResetAlertOpen, setIsResetAlertOpen] = useState(false);
 
   // Ref to track if fetchPlayer.mutate() has already been called
   const isFetchPlayerCalled = useRef(false);
@@ -83,13 +86,22 @@ function getPlayersAuction() {
     },
   });
 
-  const { data: teams } = useQuery<Team[]>({
+  const { data: teams, isLoading: isLoadingTeams } = useQuery<Team[]>({
     queryKey: ["teams"],
     queryFn: async () => {
       const teams = await getAllTeams();
       return teams || [];
     },
+    
   });
+
+  useEffect(() => {
+    if (!isLoadingTeams && teams?.length === 0) {
+      toast.error("No teams found. Please create a team to get started.");
+      localStorage.setItem("iplAuctionStarted", "false");
+      navigate({ to: '/app/team' });
+    }
+  }, [isLoadingTeams, teams, navigate]);
 
   const soldMutation = useMutation({
     mutationFn: async (payload: { player: Auction; sellPrice: number; teamId: string }) => {
@@ -213,6 +225,15 @@ function getPlayersAuction() {
     fetchPlayer.mutate();
   };
 
+  const handleResetAuction = () => {
+    localStorage.setItem("iplAuctionStarted", "false");
+    toast.success("Auction has been reset!");
+    changeStatus.mutate({
+      ...playerData!
+    });
+    navigate({ to: '/app/auction' });
+  };
+
   return (
     <>
       <SidebarInset className="w-full">
@@ -239,26 +260,52 @@ function getPlayersAuction() {
         </header>
         <Separator className="mb-4" />
 
-        <div className="w-full min-h-200 m-auto flex flex-col items-center justify-center bg-background text-foreground px-8 py-12">
+        <div className="w-full min-h-200 m-auto flex flex-col items-center justify-center bg-background text-foreground px-4 sm:px-6 md:px-8 py-8 md:py-12">
+          
           {playerData ? (
             isPlayer ? (
-              <div className="w-full h-full border border-border rounded-xl p-8 shadow-lg bg-card tracking-wider">
-                <h1 className="text-3xl font-bold text-primary mb-6 text-center">
-                  Player Information
-                </h1>
+              <div className="w-full h-full border border-border rounded-xl p-4 sm:p-6 md:p-8 shadow-lg bg-card tracking-wider">
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+                  <h1 className="text-2xl md:text-3xl font-bold text-primary text-center md:text-left">
+                    Player Information
+                  </h1>
+                  
+                  {/* Reset Auction Button positioned on the right */}
+                  <AlertDialog open={isResetAlertOpen} onOpenChange={setIsResetAlertOpen}>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" className="cursor-pointer text-white text-sm font-semibold px-3 py-1 rounded-md mt-4 md:mt-0">
+                        Reset Auction
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle >Reset Auction</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to reset the auction? This will end the current auction session.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction className="cursor-pointer" onClick={handleResetAuction}>
+                          Reset Auction
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
 
                 {loading ? (
                   <div className="flex flex-col items-center mt-8">
-                    <LoaderCircle className="animate-spin w-14 h-14 text-primary" />
-                    <p className="mt-4 text-lg text-muted-foreground">
+                    <LoaderCircle className="animate-spin w-12 h-12 md:w-14 md:h-14 text-primary" />
+                    <p className="mt-4 text-base md:text-lg text-muted-foreground">
                       Loading next player...
                     </p>
                   </div>
                 ) : (
-                  <div className="flex justify-between gap-8 text-lg">
+                  <div className="flex flex-col md:flex-row md:justify-between gap-6 md:gap-8 text-base md:text-lg">
                     {/* Player Details */}
-                    <div className="w-1/2 space-y-2">
-                      <h2 className="text-xl font-semibold mb-2 border-b border-border pb-2">
+                    <div className="w-full md:w-1/2 space-y-2">
+                      <h2 className="text-lg md:text-xl font-semibold mb-2 border-b border-border pb-2">
                         Personal Details
                       </h2>
                       <p>
@@ -273,8 +320,8 @@ function getPlayersAuction() {
                     </div>
 
                     {/* IPL Details */}
-                    <div className="w-1/2 space-y-2">
-                      <h2 className="text-xl font-semibold mb-2 border-b border-border pb-2">
+                    <div className="w-full md:w-1/2 space-y-2">
+                      <h2 className="text-lg md:text-xl font-semibold mb-2 border-b border-border pb-2">
                         IPL Information
                       </h2>
                       <p>
@@ -286,7 +333,7 @@ function getPlayersAuction() {
                       <p>
                         <strong>Status:</strong>
                         <span
-                          className={`ml-2 px-4 py-1 rounded-lg text-white text-md font-semibold ${playerData.status === "Sold"
+                          className={`ml-2 px-3 py-1 rounded-lg text-white text-sm md:text-md font-semibold ${playerData.status === "Sold"
                             ? "bg-green-500"
                             : "bg-red-500"
                             }`}
@@ -299,10 +346,10 @@ function getPlayersAuction() {
                 )}
 
                 {/* Action Buttons */}
-                <div className="mt-8 flex justify-center gap-6">
+                <div className="mt-6 md:mt-8 flex flex-col sm:flex-row justify-center gap-4 md:gap-6">
                   <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button className="bg-blue-600 cursor-pointer hover:bg-gray-700 text-white text-lg font-semibold px-4 py-4 rounded-md">
+                      <Button className="bg-blue-600 cursor-pointer hover:bg-gray-700 text-white text-base md:text-lg font-semibold px-3 py-2 md:px-4 md:py-4 rounded-md w-full sm:w-auto">
                         Sell Player
                       </Button>
                     </DialogTrigger>
@@ -365,7 +412,7 @@ function getPlayersAuction() {
                     <AlertDialogTrigger asChild>
                       <Button
                         variant="destructive"
-                        className="hover:bg-gray-700 cursor-pointer text-white text-lg font-semibold px-4 py-4 rounded-md"
+                        className="hover:bg-gray-700 cursor-pointer text-white text-base md:text-lg font-semibold px-3 py-2 md:px-4 md:py-4 rounded-md w-full sm:w-auto"
                       >
                         Mark as Unsold
                       </Button>
@@ -390,7 +437,7 @@ function getPlayersAuction() {
                     variant="outline"
                     onClick={handleNextPlayer}
                     disabled={loading || !playerData}
-                    className="cursor-pointer border-primary text-primary text-lg font-semibold px-6 py-3 rounded-lg"
+                    className="cursor-pointer border-primary text-primary text-base md:text-lg font-semibold px-4 py-2 md:px-6 md:py-3 rounded-lg w-full sm:w-auto"
                   >
                     Next Player →
                   </Button>

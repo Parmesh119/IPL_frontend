@@ -100,6 +100,7 @@ function PlayerComponent() {
     const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
     const [isGlobalSelected, setIsGlobalSelected] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [acceptExcel, setAcceptExcel] = useState(false);
 
     const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -406,7 +407,13 @@ function PlayerComponent() {
                         className={`cursor-pointer ${theme !== "dark" ? "text-white font-bold" : "bg-destructive text-white font-bold"}`}
                         disabled={selectedPlayers.length === 0} onClick={() => handleDeletePlayer()}><Trash2 />{isGlobalSelected ? "Delete All" : "Delete Player"}</Button>
                     <label
-                        onClick={handleOpenDialog} // Open the dialog when clicking the Upload button
+                        onClick={() => {
+                            if (!acceptExcel) {
+                                handleOpenDialog();
+                            } else {
+                                document.getElementById("file_upload")?.click();
+                            }
+                        }} // Open the dialog when clicking the Upload button
                         className={`flex flex-row cursor-pointer tracking-wider px-4 py-1 gap-2 text-md rounded-sm ${theme === "dark" ? "!bg-blue-500 text-white" : "bg-white text-black border border-gray-800"}`}
                     >
                         <Upload className="w-4 h-6" /> Upload
@@ -462,7 +469,8 @@ function PlayerComponent() {
                         <AlertDialogCancel onClick={handleCloseDialog} className='cursor-pointer'>Cancel</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={() => {
-                                document.getElementById("file_upload")?.click(); // Trigger file input click
+                                setAcceptExcel(true);
+                                document.getElementById("file_upload")?.click();
                                 handleCloseDialog();
                             }}
                             className='cursor-pointer'

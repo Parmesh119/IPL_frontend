@@ -133,10 +133,6 @@ export function AppSidebar() {
                                     <BadgeCheck className="w-4 h-4" />
                                     <span>Account</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="cursor-pointer flex items-center space-x-2">
-                                    <ReceiptIndianRupeeIcon className="w-4 h-4" />
-                                    <span>Billing</span>
-                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onClick={() => {
                                         setTheme(theme === "light" ? "dark" : "light")

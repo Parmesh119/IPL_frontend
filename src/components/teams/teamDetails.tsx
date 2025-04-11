@@ -82,8 +82,15 @@ export default function TeamDetails({ teamId }: { teamId: string }) {
             router.navigate({ to: "/app/team" });
         },
         onError: (error) => {
-            alert(error.message)
-            toast.error("Error while deleting team!!");
+            toast.error("Error while deleting team!!", {
+                style: {
+                    background: "linear-gradient(90deg, #E53E3E, #C53030)",
+                    color: "white",
+                    fontWeight: "bolder",
+                    fontSize: "13px",
+                    letterSpacing: "1px",
+                }
+            });
         },
     });
 

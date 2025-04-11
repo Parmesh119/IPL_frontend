@@ -65,21 +65,53 @@ function RouteComponent() {
       if (data) {
         setSettings(data);
       }
-      toast.success('Settings updated successfully!');
+      toast.success('Settings updated successfully!', {
+        style: {
+          background: "linear-gradient(90deg, #38A169, #2F855A)",
+          color: "white",
+          fontWeight: "bolder",
+          fontSize: "13px",
+          letterSpacing: "1px",
+      }
+      });
     },
     onError: () => {
-      toast.error('Failed to update settings.');
+      toast.error('Failed to update settings.', {
+        style: {
+          background: "linear-gradient(90deg, #E53E3E, #C53030)",
+          color: "white",
+          fontWeight: "bolder",
+          fontSize: "13px",
+          letterSpacing: "1px",
+      }
+      });
     },
   });
 
   const handleSaveSettings = () => {
     // Validation
     if ((settings.minPlayers ?? 0) > (settings.maxPlayers ?? 0)) {
-      toast.error('Minimum players cannot exceed maximum players.');
+      toast.error('Minimum players cannot exceed maximum players.', {
+        style: {
+          background: "linear-gradient(90deg, #E53E3E, #C53030)",
+          color: "white",
+          fontWeight: "bolder",
+          fontSize: "13px",
+          letterSpacing: "1px",
+      }
+      });
       return;
     }
     if ((settings.budgetLimit ?? 0) <= 0) {
-      toast.error('Budget limit must be greater than 0.');
+      toast.error('Budget limit must be greater than 0.', {
+        style: {
+          background: "linear-gradient(90deg, #E53E3E, #C53030)",
+          color: "white",
+          fontWeight: "bolder",
+          fontSize: "13px",
+          letterSpacing: "1px",
+      }
+      });
       return;
     }
     // Send to backend
@@ -89,7 +121,15 @@ function RouteComponent() {
   // Early returns are now after all hooks have been declared
   if (isLoading) return <div>Loading...</div>;
   if (error) {
-    toast.error('Failed to load settings.');
+    toast.error('Failed to load settings.', {
+      style: {
+        background: "linear-gradient(90deg, #E53E3E, #C53030)",
+        color: "white",
+        fontWeight: "bolder",
+        fontSize: "13px",
+        letterSpacing: "1px",
+    }
+    });
     return <div>Error loading settings</div>;
   }
 

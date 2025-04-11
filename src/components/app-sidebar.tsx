@@ -86,7 +86,6 @@ export function AppSidebar() {
         },
         onError: (error) => {
             toast.error("Error fetching user details")
-            console.log(error.message)
         }
     })
     

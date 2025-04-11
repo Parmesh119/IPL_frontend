@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { Auction } from "@/schemas/auction";
 import { createFileRoute } from "@tanstack/react-router";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -10,13 +10,24 @@ import {
   BreadcrumbSeparator,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
-import { useMutation } from "@tanstack/react-query";
-import { getPlayersForAuction } from "@/lib/actions";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { getPlayersForAuction, getAllTeams, markPlayerSold, markPlayerUnsold, changeStatusPlayer } from "@/lib/actions";
 import { toast } from "sonner";
-import { LoaderCircle } from "lucide-react";
+import {
+  LoaderCircle,
+  User2,
+  DollarSign,
+  MapPin,
+  ShieldAlert,
+  ArrowRight,
+  RotateCcw,
+  ThumbsDown,
+  Coins,
+  Building,
+  Tags
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator"
-
+import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -25,14 +36,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useQuery } from "@tanstack/react-query";
-import { getAllTeams } from "@/lib/actions";
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { type Team } from "@/schemas/team";
-import { markPlayerSold } from "@/lib/actions";
-import { markPlayerUnsold } from "@/lib/actions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
@@ -45,9 +52,9 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { useRef } from "react";
-import { changeStatusPlayer } from "@/lib/actions";
 import { useNavigate } from "@tanstack/react-router";
+import { cn } from "@/lib/utils";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/app/auction/players/get")({
   component: getPlayersAuction,
@@ -80,8 +87,16 @@ function getPlayersAuction() {
     onError: (error: any) => {
       setIsPlayer(false);
       const errorMessage = error.response?.data?.error || "Error while fetching player for auction.";
-      setPlayerData(undefined)
-      toast.error(errorMessage);
+      setPlayerData(undefined);
+      toast.error(errorMessage, {
+        style: {
+          background: "linear-gradient(90deg, #E53E3E, #C53030)",
+          color: "white",
+          fontWeight: "bolder",
+          fontSize: "13px",
+          letterSpacing: "1px",
+      }
+      });
       setLoading(false);
     },
   });
@@ -92,12 +107,19 @@ function getPlayersAuction() {
       const teams = await getAllTeams();
       return teams || [];
     },
-    
   });
 
   useEffect(() => {
     if (!isLoadingTeams && teams?.length === 0) {
-      toast.error("No teams found. Please create a team to get started.");
+      toast.error("No teams found. Please create a team to get started.", {
+        style: {
+          background: "linear-gradient(90deg, #E53E3E, #C53030)",
+          color: "white",
+          fontWeight: "bolder",
+          fontSize: "13px",
+          letterSpacing: "1px",
+      }
+      });
       localStorage.setItem("iplAuctionStarted", "false");
       navigate({ to: '/app/team' });
     }
@@ -112,7 +134,15 @@ function getPlayersAuction() {
       });
     },
     onSuccess: () => {
-      toast.success("Player marked as sold.");
+      toast.success("Player marked as sold.", {
+        style: {
+          background: "linear-gradient(90deg, #38A169, #2F855A)",
+          color: "white",
+          fontWeight: "bolder",
+          fontSize: "13px",
+          letterSpacing: "1px",
+      }
+      });
       setIsDialogOpen(false);
       setLoading(true);
       fetchPlayer.mutate();
@@ -121,11 +151,35 @@ function getPlayersAuction() {
       const errorMessage = error.response?.data || "Error while marking player as sold.";
 
       if (errorMessage.includes("Team budget exceeded")) {
-        toast.error("Team budget exceeded!!");
-      } else if(errorMessage.includes("Team has reached the maximum number of players.")) {
-        toast.error("Team has reached the maximum number of players!!");
+        toast.error("Team budget exceeded!!", {
+          style: {
+            background: "linear-gradient(90deg, #E53E3E, #C53030)",
+            color: "white",
+            fontWeight: "bolder",
+            fontSize: "13px",
+            letterSpacing: "1px",
+        }
+        });
+      } else if (errorMessage.includes("Team has reached the maximum number of players.")) {
+        toast.error("Team has reached the maximum number of players!!", {
+          style: {
+            background: "linear-gradient(90deg, #E53E3E, #C53030)",
+            color: "white",
+            fontWeight: "bolder",
+            fontSize: "13px",
+            letterSpacing: "1px",
+        }
+        });
       } else {
-        toast.error("Error while marking player as sold.");
+        toast.error("Error while marking player as sold.", {
+          style: {
+            background: "linear-gradient(90deg, #E53E3E, #C53030)",
+            color: "white",
+            fontWeight: "bolder",
+            fontSize: "13px",
+            letterSpacing: "1px",
+        }
+        });
       }
     },
   });
@@ -135,13 +189,29 @@ function getPlayersAuction() {
       await markPlayerUnsold(player);
     },
     onSuccess: () => {
-      toast.success("Player marked as unsold.");
+      toast.success("Player marked as unsold.", {
+        style: {
+          background: "linear-gradient(90deg, #38A169, #2F855A)",
+          color: "white",
+          fontWeight: "bolder",
+          fontSize: "13px",
+          letterSpacing: "1px",
+      }
+      });
       setIsAlertOpen(false);
       setLoading(true);
       fetchPlayer.mutate();
     },
     onError: () => {
-      toast.error("Error while marking player as unsold.");
+      toast.error("Error while marking player as unsold.", {
+        style: {
+          background: "linear-gradient(90deg, #E53E3E, #C53030)",
+          color: "white",
+          fontWeight: "bolder",
+          fontSize: "13px",
+          letterSpacing: "1px",
+      }
+      });
     },
   });
 
@@ -159,7 +229,15 @@ function getPlayersAuction() {
       if (event.key === "F5" || (event.ctrlKey && event.key === "r")) {
         event.preventDefault();
         event.stopPropagation();
-        toast.error("Page refresh is disabled. Use the 'Next Player' button.");
+        toast.error("Page refresh is disabled. Use the 'Next Player' button.", {
+          style: {
+            background: "linear-gradient(90deg, #E53E3E, #C53030)",
+            color: "white",
+            fontWeight: "bolder",
+            fontSize: "13px",
+            letterSpacing: "1px",
+        }
+        });
       }
     };
 
@@ -174,7 +252,15 @@ function getPlayersAuction() {
 
   const handleSaveChanges = () => {
     if (!sellPrice || !selectedTeamId) {
-      toast.error("Please provide a sell price and select a team.");
+      toast.error("Please provide a sell price and select a team.", {
+        style: {
+          background: "linear-gradient(90deg, #E53E3E, #C53030)",
+          color: "white",
+          fontWeight: "bolder",
+          fontSize: "13px",
+          letterSpacing: "1px",
+      }
+      });
       return;
     }
 
@@ -187,12 +273,28 @@ function getPlayersAuction() {
     const sanitizedSellPrice = parseFloat(sellPrice.toString());
 
     if (isNaN(sanitizedSellPrice)) {
-      toast.error("Sell price must be a valid number.");
+      toast.error("Sell price must be a valid number.", {
+        style: {
+          background: "linear-gradient(90deg, #E53E3E, #C53030)",
+          color: "white",
+          fontWeight: "bolder",
+          fontSize: "13px",
+          letterSpacing: "1px",
+      }
+      });
       return;
     }
 
     if (sanitizedSellPrice < sanitizedBasePrice) {
-      toast.error("Sell price cannot be less than base price.");
+      toast.error("Sell price cannot be less than base price.", {
+        style: {
+          background: "linear-gradient(90deg, #E53E3E, #C53030)",
+          color: "white",
+          fontWeight: "bolder",
+          fontSize: "13px",
+          letterSpacing: "1px",
+      }
+      });
       return;
     }
 
@@ -227,231 +329,320 @@ function getPlayersAuction() {
 
   const handleResetAuction = () => {
     localStorage.setItem("iplAuctionStarted", "false");
-    toast.success("Auction has been reset!");
+    toast.success("Auction has been reset!", {
+      style: {
+        background: "linear-gradient(90deg, #38A169, #2F855A)",
+        color: "white",
+        fontWeight: "bolder",
+        fontSize: "13px",
+        letterSpacing: "1px",
+    }
+    });
     changeStatus.mutate({
       ...playerData!
     });
     navigate({ to: '/app/auction' });
   };
 
-  return (
-    <>
-      <SidebarInset className="w-full">
-        <header className="flex h-16 shrink-0 items-center gap-2">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <Breadcrumb>
-              <BreadcrumbList className="tracking-wider">
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="#">Auction</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Players</BreadcrumbPage>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Bid</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-        </header>
-        <Separator className="mb-4" />
+  // Set base price based on player data
+  useEffect(() => {
+    if (playerData?.basePrice) {
+      // Set initial sell price to base price
+      const basePrice = parseFloat(
+        playerData.basePrice.toString().replace(/[^\d.]/g, "") || "0"
+      );
+      setSellPrice(basePrice);
+    }
+  }, [playerData]);
 
-        <div className="w-full min-h-200 m-auto flex flex-col items-center justify-center bg-background text-foreground px-4 sm:px-6 md:px-8 py-8 md:py-12">
-          
-          {playerData ? (
-            isPlayer ? (
-              <div className="w-full h-full border border-border rounded-xl p-4 sm:p-6 md:p-8 shadow-lg bg-card tracking-wider">
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
-                  <h1 className="text-2xl md:text-3xl font-bold text-primary text-center md:text-left">
-                    Player Information
-                  </h1>
-                  
-                  {/* Reset Auction Button positioned on the right */}
-                  <AlertDialog open={isResetAlertOpen} onOpenChange={setIsResetAlertOpen}>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" className="cursor-pointer text-white text-sm font-semibold px-3 py-1 rounded-md mt-4 md:mt-0">
-                        Reset Auction
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle >Reset Auction</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to reset the auction? This will end the current auction session.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction className="cursor-pointer" onClick={handleResetAuction}>
-                          Reset Auction
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+  return (
+    <SidebarInset className="w-full bg-slate-50 dark:bg-black">
+      <header className="flex h-14 shrink-0 items-center gap-2 border-b border-slate-200 dark:border-slate-800">
+        <div className="flex items-center gap-2 px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <Breadcrumb>
+            <BreadcrumbList className="tracking-wider text-sm">
+              <BreadcrumbItem>
+                <BreadcrumbLink href="#" className="text-slate-600 dark:text-slate-400">Auction</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <Link to="/app/players"><BreadcrumbLink href="#" className="text-slate-600 dark:text-slate-400">Players</BreadcrumbLink></Link>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage className="font-medium">Bid</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      </header>
+
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+              <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold text-slate-800 dark:text-slate-100">Player Auction</h1>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Manage player bidding and team assignments</p>
+            </div>
+          </div>
+
+          <AlertDialog open={isResetAlertOpen} onOpenChange={setIsResetAlertOpen}>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="cursor-pointer mt-4 sm:mt-0 flex items-center gap-2 border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Reset Auction
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-rose-600 dark:text-rose-400">Reset Auction</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to reset the auction? This will end the current auction session and cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className="cursor-pointer bg-rose-600 hover:bg-rose-700"
+                  onClick={handleResetAuction}
+                >
+                  Reset Auction
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+
+        {loading ? (
+          <div className="flex flex-col items-center justify-center h-80 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50 shadow-sm">
+            <LoaderCircle className="animate-spin w-10 h-10 text-blue-500 mb-4" />
+            <p className="text-base font-medium text-slate-800 dark:text-slate-200">Loading next player...</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Preparing player information</p>
+          </div>
+        ) : isPlayer && playerData ? (
+          <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50 shadow-sm overflow-hidden">
+            {/* Status Bar at top */}
+            <div className={cn(
+              "w-full h-1.5",
+              playerData.status === "Sold" ? "bg-emerald-400" : "bg-amber-400"
+            )} />
+
+            <div className="p-6 card shadow-sm dark:bg-gray-700 bg-gray-200" >
+              {/* Player Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="h-14 w-14 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                    <User2 className="h-7 w-7 text-indigo-600 dark:text-indigo-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100">{playerData.name}</h2>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <span className="px-2.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 text-md font-bold  tracking-wider">
+                        {playerData.role}
+                      </span>
+                      <span className="flex items-center gap-1 text-md font-bold tracking-wider text-slate-500 dark:text-slate-400">
+                        <MapPin className="h-3.5 w-3.5" /> {playerData.country}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                {loading ? (
-                  <div className="flex flex-col items-center mt-8">
-                    <LoaderCircle className="animate-spin w-12 h-12 md:w-14 md:h-14 text-primary" />
-                    <p className="mt-4 text-base md:text-lg text-muted-foreground">
-                      Loading next player...
-                    </p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col md:flex-row md:justify-between gap-6 md:gap-8 text-base md:text-lg">
-                    {/* Player Details */}
-                    <div className="w-full md:w-1/2 space-y-2">
-                      <h2 className="text-lg md:text-xl font-semibold mb-2 border-b border-border pb-2">
-                        Personal Details
-                      </h2>
-                      <p>
-                        <strong>Name:</strong> {playerData.name}
-                      </p>
-                      <p>
-                        <strong>Country:</strong> {playerData.country}
-                      </p>
-                      <p>
-                        <strong>Role:</strong> {playerData.role}
-                      </p>
-                    </div>
-
-                    {/* IPL Details */}
-                    <div className="w-full md:w-1/2 space-y-2">
-                      <h2 className="text-lg md:text-xl font-semibold mb-2 border-b border-border pb-2">
-                        IPL Information
-                      </h2>
-                      <p>
-                        <strong>Base Price:</strong> {playerData.basePrice + " Cr"}
-                      </p>
-                      <p>
-                        <strong>IPL Team:</strong> {playerData.iplTeam}
-                      </p>
-                      <p>
-                        <strong>Status:</strong>
-                        <span
-                          className={`ml-2 px-3 py-1 rounded-lg text-white text-sm md:text-md font-semibold ${playerData.status === "Sold"
-                            ? "bg-green-500"
-                            : "bg-red-500"
-                            }`}
-                        >
-                          {playerData.status}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="mt-6 md:mt-8 flex flex-col sm:flex-row justify-center gap-4 md:gap-6">
-                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="bg-blue-600 cursor-pointer hover:bg-gray-700 text-white text-base md:text-lg font-semibold px-3 py-2 md:px-4 md:py-4 rounded-md w-full sm:w-auto">
-                        Sell Player
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                      <DialogHeader>
-                        <DialogTitle>Mark Player As Sold</DialogTitle>
-                        <DialogDescription>
-                          Make changes to Player. Click save when you're done.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="sellPrice" className="text-right">
-                            Sell Price
-                          </Label>
-                          <Input
-                            id="sellPrice"
-                            type="number"
-                            placeholder="Sell Price"
-                            className="col-span-3"
-                            value={sellPrice}
-                            onChange={(e) => setSellPrice(Number(e.target.value))} // Update sell price
-                          />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="team" className="text-right">
-                            Team
-                          </Label>
-                          <Select
-                            onValueChange={(value) =>
-                              setSelectedTeamId(
-                                teams?.find((t) => t.name === value)?.id || ""
-                              )
-                            } // Update selected team's ID
-                          >
-                            <SelectTrigger id="team" className="col-span-3">
-                              <SelectValue placeholder="Select Team" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {teams?.map((teamItem) => (
-                                <SelectItem
-                                  key={teamItem.id}
-                                  value={teamItem.name}
-                                >
-                                  {teamItem.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <Button className="cursor-pointer" onClick={handleSaveChanges}>Save changes</Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-
-                  {/* Alert Dialog for Mark as Unsold */}
-                  <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="destructive"
-                        className="hover:bg-gray-700 cursor-pointer text-white text-base md:text-lg font-semibold px-3 py-2 md:px-4 md:py-4 rounded-md w-full sm:w-auto"
-                      >
-                        Mark as Unsold
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Mark Player as Unsold</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to mark this player as unsold? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleMarkUnsold}>
-                          Final Mark as Unsold
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-
-                  <Button
-                    variant="outline"
-                    onClick={handleNextPlayer}
-                    disabled={loading || !playerData}
-                    className="cursor-pointer border-primary text-primary text-base md:text-lg font-semibold px-4 py-2 md:px-6 md:py-3 rounded-lg w-full sm:w-auto"
-                  >
-                    Next Player →
-                  </Button>
+                <div className={cn(
+                  "px-3 py-1.5 rounded-full  text-sm font-bold tracking-wider flex items-center gap-1.5",
+                  playerData.status === "Sold" ? "bg-emerald-500" : "bg-amber-900 text-white"
+                )}>
+                  <Tags className="h-3.5 w-3.5" />
+                  {playerData.status}
                 </div>
               </div>
-            ) : <div className="flex items-center justify-center">
-              No Player Found.
-            </div>) : (
-            <div className="flex items-center justify-center">
-              No Player Found.
+
+              {/* Price and Team Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-6 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-5">
+                  <div>
+                    <h3 className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Base Price</h3>
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+                        <Coins className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+                      </div>
+                      <span className="text-xl font-semibold text-teal-600 dark:text-teal-400">
+                        {playerData.basePrice} Cr
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">IPL Team</h3>
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                        <Building className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <span className="text-base font-medium text-slate-800 dark:text-slate-200">
+                        {playerData.iplTeam || "Not assigned"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-5">
+                  <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">Bidding Actions</h3>
+
+                  <div className="space-y-3">
+                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button
+                          className="cursor-pointer font-bold tracking-wider w-full bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-2 h-10 shadow-sm"
+                        >
+                          <DollarSign className="h-4 w-4" />
+                          Sell Player
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                          <DialogTitle>Mark Player As Sold</DialogTitle>
+                          <DialogDescription>
+                            Set the final selling price and assign a team for {playerData.name}.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="sellPrice">
+                              Sell Price (in Cr)
+                            </Label>
+                            <Input
+                              id="sellPrice"
+                              type="number"
+                              step="0.1"
+                              placeholder="Enter amount in Crores"
+                              defaultValue={0}
+                              value={sellPrice}
+                              onChange={(e) => setSellPrice(Number(e.target.value))}
+                              className="border-slate-200 dark:border-slate-700"
+                            />
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              Base price: {playerData.basePrice} Cr
+                            </p>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="team">
+                              Assign Team
+                            </Label>
+                            <Select
+                              onValueChange={(value) =>
+                                setSelectedTeamId(
+                                  teams?.find((t) => t.name === value)?.id || ""
+                                )
+                              }
+                            >
+                              <SelectTrigger id="team" className="border-slate-200 dark:border-slate-700">
+                                <SelectValue placeholder="Select Team" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {teams?.map((teamItem) => (
+                                  <SelectItem
+                                    key={teamItem.id}
+                                    value={teamItem.name}
+                                  >
+                                    {teamItem.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button className="cursor-pointer" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                            Cancel
+                          </Button>
+                          <Button
+                            className="cursor-pointer dark:bg-gray-200 hover:dark:bg-white"
+                            onClick={handleSaveChanges}
+                          >
+                            Complete Sale
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+
+                    <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="cursor-pointer w-full border-rose-200 dark:border-rose-900 text-white dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center gap-2 h-10"
+                        >
+                          <ThumbsDown className="h-4 w-4 dark:default text-red-600" />
+                          <span className="text-red-500 font-bold tracking-wider">Mark as Unsold</span>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Mark Player as Unsold</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to mark {playerData.name} as unsold? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            className="cursor-pointer bg-red-800 text-white hover:bg-red-700"
+                            onClick={handleMarkUnsold}
+                          >
+                            Mark as Unsold
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+
+                    <Button
+                      variant="secondary"
+                      onClick={handleNextPlayer}
+                      disabled={loading || !playerData}
+                      className="cursor-pointer border border-gray-100 font-bold tracking-wider w-full h-10 flex items-center gap-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
+                    >
+                      Next Player
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
-        </div>
-      </SidebarInset>
-    </>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50 shadow-sm p-8 flex flex-col items-center justify-center text-center">
+            <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
+              <ShieldAlert className="h-8 w-8 text-slate-500 dark:text-slate-400" />
+            </div>
+            <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-2">No Player Available</h2>
+            <p className="text-slate-500 dark:text-slate-400 max-w-md mb-6">
+              There are no more players available for auction at this time or the auction has ended.
+            </p>
+            <div className="flex gap-4">
+              <Button
+                variant="outline"
+                onClick={() => navigate({ to: '/app/auction' })}
+                className="cursor-pointer"
+              >
+                Return to Auction Home
+              </Button>
+              <Button
+                onClick={() => fetchPlayer.mutate()}
+                className="cursor-pointer bg-blue-500 hover:bg-blue-600"
+              >
+                Refresh
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </SidebarInset>
   );
 }

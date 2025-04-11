@@ -33,7 +33,15 @@ export const refreshTokenAction = async (data: TRefreshTokenRequest): Promise<TA
 export async function getUserDetails(): Promise<User> {
     const token = await authService.getAccessToken()
     if (!token) {
-        toast.error('User is not authenticated')
+        toast.error('User is not authenticated', {
+            style: {
+                background: "linear-gradient(90deg, #E53E3E, #C53030)",
+                color: "white",
+                fontWeight: "bolder",
+                fontSize: "13px",
+                letterSpacing: "1px",
+            }
+        })
         throw new Error('User is not authenticated')
     }
 

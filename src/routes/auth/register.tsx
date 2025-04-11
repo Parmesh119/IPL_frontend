@@ -60,13 +60,41 @@ function RegisterComponent() {
       if(data) {
         toast.success('Registration Successful', {
           description: "You can now login with your credentials",
+          style: {
+            background: "linear-gradient(90deg, #38A169, #2F855A)",
+            color: "white",
+            fontWeight: "bolder",
+            fontSize: "13px",
+            letterSpacing: "1px",
+        }
         })
         navigate({ to: '/auth/login' })
       }
     },
-    onError: (error) => {
-      console.error('Registration error:', error)
-      toast.error(`Registration failed: ${error.message}`)
+    onError: (error: any) => {
+      const status = error?.response?.status
+      if (status === 403) {
+        toast.error('Username already exists!!', {
+          description: 'Please choose a different username',
+          style: {
+            backgroundColor: "#f44336",
+            color: '#fff',
+            fontWeight: 'bolder',
+            letterSpacing: '1px',
+            fontSize: '13px',
+          },
+        })
+        return;
+      }
+      toast.error('Registration failed', {
+        style: {
+          background: "linear-gradient(90deg, #E53E3E, #C53030)",
+          color: "white",
+          fontWeight: "bolder",
+          fontSize: "13px",
+          letterSpacing: "1px",
+      }
+      })
     }
   })
 

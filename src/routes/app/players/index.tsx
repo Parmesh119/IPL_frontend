@@ -109,10 +109,18 @@ function PlayerComponent() {
             return await uploadFileAction(file); // Call the action function
         },
         onSuccess: () => {
-            window.location.reload()
+            queryClient.invalidateQueries({ queryKey: ['playersList'] });
         },
         onError: (error: any) => {
-            toast.error(`Error uploading file: ${error.response?.data?.error || error.message}`);
+            toast.error(`Error uploading file: ${error.response?.data?.error || error.message}`, {
+                style: {
+                    background: "linear-gradient(90deg, #E53E3E, #C53030)",
+                    color: "white",
+                    fontWeight: "bolder",
+                    fontSize: "13px",
+                    letterSpacing: "1px",
+                }
+            });
         },
     });
 
@@ -156,7 +164,15 @@ function PlayerComponent() {
                 const players = await listPlayersAction(filters);
 
                 if (!Array.isArray(players)) {
-                    toast.error("Received invalid data structure from server.");
+                    toast.error("Received invalid data structure from server.", {
+                        style: {
+                            background: "linear-gradient(90deg, #E53E3E, #C53030)",
+                            color: "white",
+                            fontWeight: "bolder",
+                            fontSize: "13px",
+                            letterSpacing: "1px",
+                        }
+                    });
                     return defaultPlayersData; // Return empty array
                 }
 
@@ -199,7 +215,15 @@ function PlayerComponent() {
     const { mutate: addPlayer, isPending: isAddingPlayer } = useMutation<Player, Error, Player>({
         mutationFn: addPlayerAction,
         onSuccess: (data) => { toast.success(`Player "${data.name}" added successfully`); queryClient.invalidateQueries({ queryKey: ['playersList'] }); setOpenAddDialog(false); handleCancelAdd(); },
-        onError: (error) => { toast.error(`Error adding player: ${error.message || "An unknown error occurred"}`); },
+        onError: (error) => { toast.error(`Error adding player: ${error.message || "An unknown error occurred"}`, {
+            style: {
+                background: "linear-gradient(90deg, #E53E3E, #C53030)",
+                color: "white",
+                fontWeight: "bolder",
+                fontSize: "13px",
+                letterSpacing: "1px",
+            }
+        }); },
     });
 
     const deleteMutation = useMutation({
@@ -208,11 +232,27 @@ function PlayerComponent() {
             return deletedPlayer;
         },
         onSuccess: () => {
-            toast.success("Player deleted successfully");
-            window.location.href = `/app/players`;
+            toast.success("Player deleted successfully", {
+                style: {
+                    background: "linear-gradient(90deg, #38A169, #2F855A)",
+                    color: "white",
+                    fontWeight: "bolder",
+                    fontSize: "13px",
+                    letterSpacing: "1px",
+                }
+            });
+            queryClient.invalidateQueries({ queryKey: ['playersList'] });
         },
         onError: () => {
-            toast.error(`Error deleting player`);
+            toast.error(`Error deleting player`, {
+                style: {
+                    background: "linear-gradient(90deg, #E53E3E, #C53030)",
+                    color: "white",
+                    fontWeight: "bolder",
+                    fontSize: "13px",
+                    letterSpacing: "1px",
+                }
+            });
             setSelectedPlayers([]);
         },
     });
@@ -268,7 +308,15 @@ function PlayerComponent() {
 
     // --- Row Click Handler (No changes needed) ---
     const handleRowClick = (playerId: string | undefined) => { /* ... navigate ... */
-        if (playerId) { navigate({ to: '/app/players/$playerId', params: { playerId } }); } else { toast.error("Cannot view details: Player ID is missing."); }
+        if (playerId) { navigate({ to: '/app/players/$playerId', params: { playerId } }); } else { toast.error("Cannot view details: Player ID is missing.", {
+            style: {
+                background: "linear-gradient(90deg, #E53E3E, #C53030)",
+                color: "white",
+                fontWeight: "bolder",
+                fontSize: "13px",
+                letterSpacing: "1px",
+            }
+        }); }
     };
 
     // --- Render Logic ---
@@ -283,14 +331,30 @@ function PlayerComponent() {
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
         if (!selectedFile) {
-            toast.error("No file selected.");
+            toast.error("No file selected.", {
+                style: {
+                    background: "linear-gradient(90deg, #E53E3E, #C53030)",
+                    color: "white",
+                    fontWeight: "bolder",
+                    fontSize: "13px",
+                    letterSpacing: "1px",
+                }
+            });
             return;
         }
 
         // Validate file type
         const validTypes = ["text/csv", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"];
         if (!validTypes.includes(selectedFile.type)) {
-            toast.error("Invalid file type. Please upload a .csv or .xlsx file.");
+            toast.error("Invalid file type. Please upload a .csv or .xlsx file.", {
+                style: {
+                    background: "linear-gradient(90deg, #E53E3E, #C53030)",
+                    color: "white",
+                    fontWeight: "bolder",
+                    fontSize: "13px",
+                    letterSpacing: "1px",
+                }
+            });
             return;
         }
 
@@ -298,7 +362,15 @@ function PlayerComponent() {
 
         setTimeout(() => {
             setIsUploading(false);
-            toast.success(`File "${selectedFile.name}" uploaded successfully.`);
+            toast.success(`File "${selectedFile.name}" uploaded successfully.`, {
+                style: {
+                    background: "linear-gradient(90deg, #38A169, #2F855A)",
+                    color: "white",
+                    fontWeight: "bolder",
+                    fontSize: "13px",
+                    letterSpacing: "1px",
+                }
+            });
         }, 2000);
 
         setFile(selectedFile);
@@ -368,15 +440,33 @@ function PlayerComponent() {
             setSelectedPlayers([]);
             setIsGlobalSelected(false);
         } else {
-            if (newPlayer.teamId !== null) {
-                toast.error("Player is a part of a team. Cannot remove the player")
+            const playerToDelete = playersData.find((player) => selectedPlayers.includes(player.id || ""));
+            const partTeam = safeTeams.find((team) => team.id === playerToDelete?.teamId);
+            if (partTeam) {
+                toast.error("Player is a part of a team. Cannot remove the player", {
+                    style: {
+                        background: "linear-gradient(90deg, #E53E3E, #C53030)",
+                        color: "white",
+                        fontWeight: "bolder",
+                        fontSize: "13px",
+                        letterSpacing: "1px",
+                    }
+                })
                 setSelectedPlayers([]);
                 return;
             }
             if (selectedPlayers.length === 1) {
                 deleteMutation.mutate(selectedPlayers[0]);
             } else {
-                toast.error("Please select a single player to delete.");
+                toast.error("Please select a single player to delete.", {
+                    style: {
+                        background: "linear-gradient(90deg, #E53E3E, #C53030)",
+                        color: "white",
+                        fontWeight: "bolder",
+                        fontSize: "13px",
+                        letterSpacing: "1px",
+                    }
+                });
             }
         }
     };

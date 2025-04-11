@@ -23,7 +23,16 @@ export default function Hero() {
     const handleProtectedNavigation = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, path: string) => {
         if (isLoggedIn) {
             e.preventDefault() // Prevent navigation
-            toast.info('You are already logged in! Redirecting to dashboard...')
+            toast.info('You are already logged in!', {
+                description: 'Redirecting to dashboard...',
+                style: {
+                    backgroundColor: '#3182CE',
+                    color: '#fff',
+                    fontSize: '13px',
+                    fontWeight: 'bolder',
+                    letterSpacing: '1px',
+                },
+            })
             navigate({ to: "/app/dashboard" }) 
         } else {
             navigate({ to: path }) // Navigate to the desired path

@@ -52,11 +52,14 @@ function LoginComponent() {
       await authService.setTokens(data)
 
       toast.success('Login Successful', {
-        description: (
-          <span className="text-black dark:text-white">
-            Welcome back! Redirecting to dashboard...
-          </span>
-        ),
+        description: "Welcome back! Redirecting to dashboard...",
+        style: {
+          background: "linear-gradient(90deg, #38A169, #2F855A)",
+          color: "white",
+          fontWeight: "bolder",
+          fontSize: "13px",
+          letterSpacing: "1px",
+      }
       })
 
       navigate({ to: '/app/dashboard' })
@@ -66,6 +69,13 @@ function LoginComponent() {
 
       toast.error('Login Failed', {
         description: getErrorMessage(),
+        style: {
+          background: "linear-gradient(90deg, #E53E3E, #C53030)",
+          color: "white",
+          fontWeight: "bolder",
+          fontSize: "13px",
+          letterSpacing: "1px",
+      }
       })
     },
   })

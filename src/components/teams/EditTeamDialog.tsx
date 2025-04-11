@@ -11,11 +11,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { type Team, TeamSchema, type TeamDTO } from "@/schemas/team";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateTeamAction } from "@/lib/actions"; // Replace with your API call
 import { toast } from "sonner";
 import { useTheme } from "../theme-provider";
-import { useRouter } from "@tanstack/react-router";
 import { Label } from "../ui/label";
 
 interface EditTeamDialogProps {
@@ -25,16 +24,15 @@ interface EditTeamDialogProps {
 }
 
 export function EditTeamDialog({ open, onClose, team }: EditTeamDialogProps) {
-
-    const router = useRouter();
+    
     const {
         register,
         handleSubmit,
-        formState: { errors },
+        formState: {},
     } = useForm<Team>({
         resolver: zodResolver(TeamSchema),
     });
-
+    const queryClient = useQueryClient();
     const { mutate: updateTeam } = useMutation({
         mutationFn: async (updatedTeam: Team) => {
             // Call your API to update the team details
@@ -42,13 +40,29 @@ export function EditTeamDialog({ open, onClose, team }: EditTeamDialogProps) {
             return response;
         },
         onSuccess: () => {
-            toast.success("Team updated successfully");
-            window.location.href = `/app/team/${team.id}`
+            toast.success("Team updated successfully", {
+                style: {
+                    background: "linear-gradient(90deg, #38A169, #2F855A)",
+                    color: "white",
+                    fontWeight: "bolder",
+                    fontSize: "13px",
+                    letterSpacing: "1px",
+                }
+            });
+            
+            queryClient.invalidateQueries({ queryKey: ["teamDetails"] }); // Invalidate the teams query to refetch the updated data
             onClose();
         },
-        onError: (error: any) => {
-            toast.error("Error updating team");
-            console.error("Error updating team:", error);
+        onError: () => {
+            toast.error("Error updating team", {
+                style: {
+                    background: "linear-gradient(90deg, #E53E3E, #C53030)",
+                    color: "white",
+                    fontWeight: "bolder",
+                    fontSize: "13px",
+                    letterSpacing: "1px",
+                }
+            });
         },
     });
 

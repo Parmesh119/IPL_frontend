@@ -37,15 +37,30 @@ export function AddTeamDialog({ isOpen, onClose, onTeamAdded }: AddTeamDialogPro
     const { mutate: addTeam } = useMutation({
         mutationFn: (data: Team) => addTeamAction(data),
         onSuccess: () => {
-            toast.success("Team added successfully");
+            toast.success("Team added successfully", {
+                style: {
+                    background: "linear-gradient(90deg, #38A169, #2F855A)",
+                    color: "white",
+                    fontWeight: "bolder",
+                    fontSize: "13px",
+                    letterSpacing: "1px",
+                }
+            });
             reset();
             onClose();
             queryClient.invalidateQueries({ queryKey: ['teams'] });
             onTeamAdded
         },
         onError: (error: any) => {
-            toast.error(`Error adding team: ${error.message || "Unknown error"}`);
-            console.error("Error adding team:", error);
+            toast.error(`Error adding team: ${error.message || "Unknown error"}`, {
+                style: {
+                    background: "linear-gradient(90deg, #E53E3E, #C53030)",
+                    color: "white",
+                    fontWeight: "bolder",
+                    fontSize: "13px",
+                    letterSpacing: "1px",
+                }
+            });
         },
     });
 

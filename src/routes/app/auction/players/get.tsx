@@ -396,7 +396,7 @@ function getPlayersAuction() {
               <Button
                 variant="outline"
                 size="sm"
-                className="cursor-pointer mt-4 sm:mt-0 flex items-center gap-2 border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20"
+                className="cursor-pointer mt-4 sm:mt-0 flex w-full lg:w-50 items-center gap-2 border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20"
               >
                 <RotateCcw className="h-4 w-4" />
                 Reset Auction
@@ -404,15 +404,15 @@ function getPlayersAuction() {
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle className="text-rose-600 dark:text-rose-400">Reset Auction</AlertDialogTitle>
+                <AlertDialogTitle className="text-rose-600 dark:text-white">Reset Auction</AlertDialogTitle>
                 <AlertDialogDescription>
                   Are you sure you want to reset the auction? This will end the current auction session and cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
                 <AlertDialogAction
-                  className="cursor-pointer bg-rose-600 hover:bg-rose-700"
+                  className="cursor-pointer dark:bg-red-700 dark:text-white  hover:bg-rose-700"
                   onClick={handleResetAuction}
                 >
                   Reset Auction
@@ -436,14 +436,16 @@ function getPlayersAuction() {
               playerData.status === "Sold" ? "bg-emerald-400" : "bg-amber-400"
             )} />
 
-            <div className="p-6 card shadow-sm dark:bg-gray-700 bg-gray-200" >
+            <div className="p-6 card shadow-sm dark:bg-gray-700 bg-gray-200 lg:h-120 h-200"  >
               {/* Player Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 h-70 lg:h-40">
+              <img
+              src={playerData.image_url || "https://static-00.iconduck.com/assets.00/profile-circle-icon-512x512-zxne30hp.png"}
+              alt={playerData.name || "Player Image"}
+              className="w-40 h-40 object-cover m-auto lg:m-0 rounded-full border bg-white border-gray-300 shadow-md"
+            />
                 <div className="flex items-center gap-4">
-                  <div className="h-14 w-14 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-                    <User2 className="h-7 w-7 text-indigo-600 dark:text-indigo-400" />
-                  </div>
-                  <div>
+                  <div className="text-center flex flex-col space-y-2 m-auto">
                     <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100">{playerData.name}</h2>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <span className="px-2.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 text-md font-bold  tracking-wider">
@@ -457,7 +459,7 @@ function getPlayersAuction() {
                 </div>
 
                 <div className={cn(
-                  "px-3 py-1.5 rounded-full  text-sm font-bold tracking-wider flex items-center gap-1.5",
+                  "px-3 py-1.5 rounded-full m-auto lg:m-0 text-sm font-bold tracking-wider flex items-center gap-1.5",
                   playerData.status === "Sold" ? "bg-emerald-500" : "bg-amber-900 text-white"
                 )}>
                   <Tags className="h-3.5 w-3.5" />

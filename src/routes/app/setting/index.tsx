@@ -31,6 +31,7 @@ function RouteComponent() {
     maxPlayers: 23,
     minPlayers: 15,
     budgetLimit: 100,
+    maxTeam: 1
   });
 
   const { data: settingsData, isLoading, error } = useQuery({
@@ -48,6 +49,7 @@ function RouteComponent() {
         maxPlayers: settingsData.maxPlayers,
         minPlayers: settingsData.minPlayers,
         budgetLimit: settingsData.budgetLimit,
+        maxTeam: settingsData.maxTeam,
       });
     }
   }, [settingsData]);
@@ -58,6 +60,7 @@ function RouteComponent() {
         maxPlayers: settings.maxPlayers,
         minPlayers: settings.minPlayers,
         budgetLimit: settings.budgetLimit,
+        maxTeam: settings.maxTeam,
       };
       return await updateSettingsAction(settingsToUpdate);
     },
@@ -210,7 +213,25 @@ function RouteComponent() {
                 />
               </CardContent>
             </Card>
-            
+
+            {/* Maximum Team can create by one user */}
+            <Card className={`w-full ${theme === 'dark' ? 'bg-black text-white' : 'bg-neutral-100 text-black'}`}>
+              <CardHeader>
+                <CardTitle>Maximum Team</CardTitle>
+                <CardDescription>Maximum Team can be create by one user.</CardDescription>
+              </CardHeader>
+              <CardContent className="mt-2">
+                <Input
+                  type="number"
+                  name="maxTeam"
+                  value={settings.maxTeam}
+                  onChange={(e) => setSettings({ ...settings, maxTeam: Number(e.target.value) })}
+                  placeholder="Enter maximum team"
+                  className="w-full"
+                />
+              </CardContent>
+            </Card>
+
           </div>
 
           <div className="mt-10 flex justify-center">

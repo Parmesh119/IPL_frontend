@@ -30,7 +30,8 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({
   };
 
   const handleCancelEdit = () => {
-    setEditingPlayer(player); // Reset to original values
+    alert(player.image_url)
+    setEditingPlayer(player);
     setIsEditOpen(false);
   };
 
@@ -47,23 +48,31 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({
       >
         <CardContent>
           {/* Header Section */}
-          <div className="flex flex-row justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold">Player Information</h2>
-            <Button
-              className={`${theme !== "dark"
-                ? " bg-black text-white"
-                : "text-black bg-white"
-                } text-md cursor-pointer`}
-              onClick={() => {
-                setEditingPlayer(player);
-                setIsEditOpen(true);
-              }}
-            >
-              Edit
-            </Button>
+          <div className="flex flex-col justify-between items-center mb-6 w-full">
+            <img
+              src={player.image_url || "https://static-00.iconduck.com/assets.00/profile-circle-icon-512x512-zxne30hp.png"}
+              alt={player.name || "Player Image"}
+              className="w-40 h-40 sm:w-48 sm:h-48 object-cover rounded-full border bg-white border-gray-300 shadow-md"
+            />
+            <div className="flex justify-between items-center w-full mt-6"> {/* Added w-full, justify-between, items-center, mt-6 and padding */}
+              <h2 className="text-2xl font-semibold">Player Information</h2>
+              <Button
+                className={`${theme !== "dark"
+                  ? " bg-black text-white"
+                  : "text-black bg-white"
+                  } text-md cursor-pointer`}
+                onClick={() => {
+                  setEditingPlayer(player);
+                  setIsEditOpen(true);
+                }}
+              >
+                Edit
+              </Button>
+            </div>
           </div>
 
           {/* Grid Layout for Player Details */}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {/* Personal Details */}
             <div className="text-lg">
@@ -115,7 +124,7 @@ const PlayerDetails: React.FC<PlayerDetailsProps> = ({
                 </div>
               </div>
             </div>
-            
+
             {/* Playing Style Section */}
             <div className="mt-8">
               <h3 className="font-semibold text-lg mb-4">IPL Information</h3>

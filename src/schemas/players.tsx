@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const PlayerSchema = z.object({
   id: z.string().optional(),
+  image_url: z.string().min(1).default("https://static-00.iconduck.com/assets.00/profile-circle-icon-512x512-zxne30hp.png"),
   name: z.string().min(1, { message: "Name is required" }),
   country: z.string().min(1, { message: "Country is required" }),
   age: z.number().int().positive({ message: "Age must be a positive integer" }).optional(),

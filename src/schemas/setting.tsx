@@ -13,6 +13,9 @@ const settingsSchema = z.object({
   budgetLimit: z
     .number()
     .min(1, { message: "Budget limit must be greater than 0." }),
+    maxTeam: z.
+    number()
+    .max(1, { message: "Maximum team cannot exceed 1." }),
 });
 
 // Define the TypeScript type based on the schema

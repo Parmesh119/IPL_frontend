@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { type Auction } from '@/schemas/auction'
 import { type ListUserRequest } from '@/schemas/players'
 import { type Settings } from '@/schemas/setting'
+import { type ListMatchRequest } from '@/schemas/match'
 
 export function getBackendUrl() {
     const backendUrl = import.meta.env.BACKEND_URL || 'http://localhost:8080'
@@ -232,6 +233,17 @@ export async function updateSettingsAction(settings: Settings): Promise<Settings
 export async function getSettingsAction(): Promise<Settings> {
     const token = await authService.getAccessToken()
     const response = await axios.get(`${getBackendUrl()}/api/settings/get`, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    })
+    return response.data;
+}
+
+// Match actions
+export async function getAllMatches(data: ListMatchRequest): Promise<any> {
+    const token = await authService.getAccessToken()
+    const response = await axios.post(`${getBackendUrl()}/api/ipl/matches/list`, data, {
         headers: {
             Authorization: `Bearer ${token}`
         }

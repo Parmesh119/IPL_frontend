@@ -18,11 +18,13 @@ import { Route as AuthLoginImport } from './routes/auth/login'
 import { Route as AppTeamIndexImport } from './routes/app/team/index'
 import { Route as AppSettingIndexImport } from './routes/app/setting/index'
 import { Route as AppPlayersIndexImport } from './routes/app/players/index'
+import { Route as AppMatchesIndexImport } from './routes/app/matches/index'
 import { Route as AppDashboardIndexImport } from './routes/app/dashboard/index'
 import { Route as AppAuctionIndexImport } from './routes/app/auction/index'
 import { Route as AppAccountIndexImport } from './routes/app/account/index'
 import { Route as AppTeamTeamIdImport } from './routes/app/team/$teamId'
 import { Route as AppPlayersPlayerIdImport } from './routes/app/players/$playerId'
+import { Route as AppMatchesMatchIdImport } from './routes/app/matches/$matchId'
 import { Route as AppAuctionPlayersGetImport } from './routes/app/auction/players/get'
 
 // Create/Update Routes
@@ -69,6 +71,12 @@ const AppPlayersIndexRoute = AppPlayersIndexImport.update({
   getParentRoute: () => AppRouteRoute,
 } as any)
 
+const AppMatchesIndexRoute = AppMatchesIndexImport.update({
+  id: '/matches/',
+  path: '/matches/',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+
 const AppDashboardIndexRoute = AppDashboardIndexImport.update({
   id: '/dashboard/',
   path: '/dashboard/',
@@ -96,6 +104,12 @@ const AppTeamTeamIdRoute = AppTeamTeamIdImport.update({
 const AppPlayersPlayerIdRoute = AppPlayersPlayerIdImport.update({
   id: '/players/$playerId',
   path: '/players/$playerId',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+
+const AppMatchesMatchIdRoute = AppMatchesMatchIdImport.update({
+  id: '/matches/$matchId',
+  path: '/matches/$matchId',
   getParentRoute: () => AppRouteRoute,
 } as any)
 
@@ -137,6 +151,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRegisterImport
       parentRoute: typeof rootRoute
     }
+    '/app/matches/$matchId': {
+      id: '/app/matches/$matchId'
+      path: '/matches/$matchId'
+      fullPath: '/app/matches/$matchId'
+      preLoaderRoute: typeof AppMatchesMatchIdImport
+      parentRoute: typeof AppRouteImport
+    }
     '/app/players/$playerId': {
       id: '/app/players/$playerId'
       path: '/players/$playerId'
@@ -170,6 +191,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/app/dashboard'
       preLoaderRoute: typeof AppDashboardIndexImport
+      parentRoute: typeof AppRouteImport
+    }
+    '/app/matches/': {
+      id: '/app/matches/'
+      path: '/matches'
+      fullPath: '/app/matches'
+      preLoaderRoute: typeof AppMatchesIndexImport
       parentRoute: typeof AppRouteImport
     }
     '/app/players/': {
@@ -206,11 +234,13 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 interface AppRouteRouteChildren {
+  AppMatchesMatchIdRoute: typeof AppMatchesMatchIdRoute
   AppPlayersPlayerIdRoute: typeof AppPlayersPlayerIdRoute
   AppTeamTeamIdRoute: typeof AppTeamTeamIdRoute
   AppAccountIndexRoute: typeof AppAccountIndexRoute
   AppAuctionIndexRoute: typeof AppAuctionIndexRoute
   AppDashboardIndexRoute: typeof AppDashboardIndexRoute
+  AppMatchesIndexRoute: typeof AppMatchesIndexRoute
   AppPlayersIndexRoute: typeof AppPlayersIndexRoute
   AppSettingIndexRoute: typeof AppSettingIndexRoute
   AppTeamIndexRoute: typeof AppTeamIndexRoute
@@ -218,11 +248,13 @@ interface AppRouteRouteChildren {
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppMatchesMatchIdRoute: AppMatchesMatchIdRoute,
   AppPlayersPlayerIdRoute: AppPlayersPlayerIdRoute,
   AppTeamTeamIdRoute: AppTeamTeamIdRoute,
   AppAccountIndexRoute: AppAccountIndexRoute,
   AppAuctionIndexRoute: AppAuctionIndexRoute,
   AppDashboardIndexRoute: AppDashboardIndexRoute,
+  AppMatchesIndexRoute: AppMatchesIndexRoute,
   AppPlayersIndexRoute: AppPlayersIndexRoute,
   AppSettingIndexRoute: AppSettingIndexRoute,
   AppTeamIndexRoute: AppTeamIndexRoute,
@@ -238,11 +270,13 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteRouteWithChildren
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/app/matches/$matchId': typeof AppMatchesMatchIdRoute
   '/app/players/$playerId': typeof AppPlayersPlayerIdRoute
   '/app/team/$teamId': typeof AppTeamTeamIdRoute
   '/app/account': typeof AppAccountIndexRoute
   '/app/auction': typeof AppAuctionIndexRoute
   '/app/dashboard': typeof AppDashboardIndexRoute
+  '/app/matches': typeof AppMatchesIndexRoute
   '/app/players': typeof AppPlayersIndexRoute
   '/app/setting': typeof AppSettingIndexRoute
   '/app/team': typeof AppTeamIndexRoute
@@ -254,11 +288,13 @@ export interface FileRoutesByTo {
   '/app': typeof AppRouteRouteWithChildren
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/app/matches/$matchId': typeof AppMatchesMatchIdRoute
   '/app/players/$playerId': typeof AppPlayersPlayerIdRoute
   '/app/team/$teamId': typeof AppTeamTeamIdRoute
   '/app/account': typeof AppAccountIndexRoute
   '/app/auction': typeof AppAuctionIndexRoute
   '/app/dashboard': typeof AppDashboardIndexRoute
+  '/app/matches': typeof AppMatchesIndexRoute
   '/app/players': typeof AppPlayersIndexRoute
   '/app/setting': typeof AppSettingIndexRoute
   '/app/team': typeof AppTeamIndexRoute
@@ -271,11 +307,13 @@ export interface FileRoutesById {
   '/app': typeof AppRouteRouteWithChildren
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/app/matches/$matchId': typeof AppMatchesMatchIdRoute
   '/app/players/$playerId': typeof AppPlayersPlayerIdRoute
   '/app/team/$teamId': typeof AppTeamTeamIdRoute
   '/app/account/': typeof AppAccountIndexRoute
   '/app/auction/': typeof AppAuctionIndexRoute
   '/app/dashboard/': typeof AppDashboardIndexRoute
+  '/app/matches/': typeof AppMatchesIndexRoute
   '/app/players/': typeof AppPlayersIndexRoute
   '/app/setting/': typeof AppSettingIndexRoute
   '/app/team/': typeof AppTeamIndexRoute
@@ -289,11 +327,13 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth/login'
     | '/auth/register'
+    | '/app/matches/$matchId'
     | '/app/players/$playerId'
     | '/app/team/$teamId'
     | '/app/account'
     | '/app/auction'
     | '/app/dashboard'
+    | '/app/matches'
     | '/app/players'
     | '/app/setting'
     | '/app/team'
@@ -304,11 +344,13 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth/login'
     | '/auth/register'
+    | '/app/matches/$matchId'
     | '/app/players/$playerId'
     | '/app/team/$teamId'
     | '/app/account'
     | '/app/auction'
     | '/app/dashboard'
+    | '/app/matches'
     | '/app/players'
     | '/app/setting'
     | '/app/team'
@@ -319,11 +361,13 @@ export interface FileRouteTypes {
     | '/app'
     | '/auth/login'
     | '/auth/register'
+    | '/app/matches/$matchId'
     | '/app/players/$playerId'
     | '/app/team/$teamId'
     | '/app/account/'
     | '/app/auction/'
     | '/app/dashboard/'
+    | '/app/matches/'
     | '/app/players/'
     | '/app/setting/'
     | '/app/team/'
@@ -367,11 +411,13 @@ export const routeTree = rootRoute
     "/app": {
       "filePath": "app/route.tsx",
       "children": [
+        "/app/matches/$matchId",
         "/app/players/$playerId",
         "/app/team/$teamId",
         "/app/account/",
         "/app/auction/",
         "/app/dashboard/",
+        "/app/matches/",
         "/app/players/",
         "/app/setting/",
         "/app/team/",
@@ -383,6 +429,10 @@ export const routeTree = rootRoute
     },
     "/auth/register": {
       "filePath": "auth/register.tsx"
+    },
+    "/app/matches/$matchId": {
+      "filePath": "app/matches/$matchId.tsx",
+      "parent": "/app"
     },
     "/app/players/$playerId": {
       "filePath": "app/players/$playerId.tsx",
@@ -402,6 +452,10 @@ export const routeTree = rootRoute
     },
     "/app/dashboard/": {
       "filePath": "app/dashboard/index.tsx",
+      "parent": "/app"
+    },
+    "/app/matches/": {
+      "filePath": "app/matches/index.tsx",
       "parent": "/app"
     },
     "/app/players/": {

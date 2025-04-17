@@ -1,5 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import axios from 'axios';
+import { z } from 'zod';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,7 +12,11 @@ import {
 } from "@/components/ui/breadcrumb";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { getBackendUrl } from '@/lib/actions';
+import { authService } from '@/lib/auth';
+import { get } from 'lodash';
 
+// Define the interfaces for the data
 interface RawInningsBatsman {
   id: number;
   balls: number;
@@ -49,6 +55,22 @@ interface RawInningsBowler {
   teamSName: string;
 }
 
+// Define Zod schema for the API request payload
+const FantasyPointsRequestSchema = z.object({
+  points: z.record(z.string(), z.number()),
+  match_id: z.string().optional(),
+  iplTeam1: z.string(),
+  iplTeam2: z.string(),
+});
+
+type FantasyPointsRequest = z.infer<typeof FantasyPointsRequestSchema>;
+
+// Define Zod schema for the API response
+const FantasyPointsResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string().optional(),
+});
+
 export const Route = createFileRoute('/app/matches/fantacy-points')({
   component: FantasyPointsComponent,
 });
@@ -58,8 +80,10 @@ function FantasyPointsComponent() {
   const [bowlersData, setBowlersData] = useState<RawInningsBowler[]>([]);
   const [dataLoaded, setDataLoaded] = useState(false);
 
-  useEffect(() => {
+  // Use useRef to track if we've already sent the request
+  const pointsSentRef = useRef(false);
 
+  useEffect(() => {
     const loadData = () => {
       try {
         const storedBatsmen = localStorage.getItem('fantasy_batsmen');
@@ -85,15 +109,19 @@ function FantasyPointsComponent() {
       }
     };
     loadData();
-
   }, []);
+
+  // Effect to send points data to backend once data is loaded
+  useEffect(() => {
+    // Only proceed if data is loaded and we haven't sent points yet
+    if (dataLoaded && !pointsSentRef.current && (batsmenData.length > 0 || bowlersData.length > 0)) {
+      sendPointsToBackend();
+    }
+  }, [dataLoaded, batsmenData, bowlersData]);
 
   const calculateBatsmanPoints = (batsman: RawInningsBatsman) => {
     let points = 0;
-    const runSixFours = (batsman.fours) * 4 + (batsman.sixes) * 6;
-    
-    const singles = batsman.runs - runSixFours
-    if (singles > 0) points += singles;
+    points += batsman.runs;
 
     if (batsman.fours) points += batsman.fours * 4;
     if (batsman.sixes) points += batsman.sixes * 6;
@@ -114,10 +142,12 @@ function FantasyPointsComponent() {
       else if (batsman.runs >= 75) points += 12;
       else if (batsman.runs >= 50) points += 8;
       else if (batsman.runs >= 25) points += 4;
-      else if (batsman.runs === 0) points -= 2;
+      if (batsman.outDec !== "not out" && batsman.outDec !== "did not bat") {
+        if (batsman.runs === 0) points -= 2;
+      }
     }
 
-    // Points for being in playing XI (example)
+    // Points for being in playing XI
     points += 4;
 
     return points;
@@ -126,54 +156,48 @@ function FantasyPointsComponent() {
   const calculateBowlerPoints = (bowler: RawInningsBowler) => {
     let points = 0;
     const overs = parseFloat(bowler.overs);
-  
-    // Iterate through batsmen data to check dismissals
+
     batsmenData.forEach((batsman) => {
       const { reason, player, bowler: dismissalBowler } = parseOutDec(batsman.outDec);
-  
-      // Check if the dismissal is attributed to the current bowler
+
       if (dismissalBowler === bowler.name) {
         if (reason === "run out" && player === bowler.name) {
-          // If the bowler caused the run out, do not add 30 points for the wicket
           console.log(`Run out by bowler ${bowler.name}, no wicket points added.`);
         } else if (reason === "leg before wicket" || reason === "bowled") {
-          // Add extra 8 points for LBW or bowled dismissals
-          points += 30; // Add base points for the wicket
-          points += 8; // Add extra points for LBW or bowled
+          points += 30;
+          points += 8;
         } else {
-          // Add base points for other types of dismissals
           points += 30;
         }
       }
     });
-  
-    if (bowler.maidens) points += bowler.maidens * 12;
+
+    if (bowler.maidens) points += (bowler.maidens * 12);
     if (bowler.wickets === 3) points += 4;
     if (bowler.wickets === 4) points += 8;
     if (bowler.wickets === 5) points += 12;
-  
+
     const economyRate = parseFloat(bowler.economy);
     if (overs >= 2 && !isNaN(economyRate)) {
       if (economyRate < 5) points += 6;
-      else if (economyRate >= 5 && economyRate < 5.99) points += 4;
-      else if (economyRate >= 6 && economyRate <= 7) points += 2;
-      else if (economyRate >= 10 && economyRate <= 11) points -= 2;
-      else if (economyRate >= 11.01 && economyRate <= 12) points -= 4;
-      else if (economyRate > 12) points -= 6;
+      else if (economyRate >= 5.00 && economyRate < 5.99) points += 4;
+      else if (economyRate >= 6.00 && economyRate <= 6.99) points += 2;
+      else if (economyRate >= 7.00 && economyRate <= 9.99) points += 0;
+      else if (economyRate >= 10.00 && economyRate <= 10.99) points -= 2;
+      else if (economyRate >= 11.00 && economyRate <= 11.99) points -= 4;
+      else if (economyRate > 12.00) points -= 6;
     }
-  
-    // Points for being in playing XI
+
     points += 4;
-  
-    // Add points for fielding actions
+
     const fieldingPoints: { [key: string]: number } = {};
-  
+
     batsmenData.forEach((batsman) => {
       const { reason, player, bowler } = parseOutDec(batsman.outDec);
-  
+
       if (reason === "caught") {
         if (player) {
-          fieldingPoints[player] = (fieldingPoints[player] || 0) + 8; // Add 8 points for a catch
+          fieldingPoints[player] = (fieldingPoints[player] || 0) + 8;
         }
       } else if (reason === "stumped") {
         if (player) {
@@ -183,7 +207,7 @@ function FantasyPointsComponent() {
         if (player) {
           const isWK = batsmenData.some((b) => b.name === player && b.isKeeper);
           const isBowler = bowlersData.some((b) => b.name === player);
-  
+
           if (isWK || isBowler) {
             fieldingPoints[player] = (fieldingPoints[player] || 0) + 6; // Add 6 points for WK or bowler
           } else {
@@ -192,22 +216,19 @@ function FantasyPointsComponent() {
         }
       }
     });
-  
+
     // Add extra points for players who took 3 or more catches
     Object.keys(fieldingPoints).forEach((player) => {
       const catchCount = batsmenData.filter((batsman) => {
         const { reason, player: catcher } = parseOutDec(batsman.outDec);
         return reason === "caught" && catcher === player;
       }).length;
-  
+
       if (catchCount >= 3) {
         fieldingPoints[player] += 4; // Add 4 extra points for 3 or more catches
       }
     });
-  
-    // Log fielding points for debugging
-    console.log("Fielding Points:", fieldingPoints);
-  
+
     return points;
   };
 
@@ -215,11 +236,11 @@ function FantasyPointsComponent() {
     if (!outDec || outDec === "not out" || outDec === "did not bat") {
       return { reason: outDec, player: null, bowler: null };
     }
-  
+
     let reason = "";
     let player = null;
     let bowler = null;
-  
+
     if (outDec.startsWith("c and b ")) {
       reason = "caught and bowled";
       bowler = outDec.replace("c and b ", "").trim(); // Extract bowler name
@@ -250,8 +271,80 @@ function FantasyPointsComponent() {
         player = match[1].trim(); // Extract player who caused the run out
       }
     }
-  
+
     return { reason, player, bowler };
+  };
+
+  // Function to send points to backend
+  const sendPointsToBackend = async () => {
+    try {
+      // Skip if we've already sent the points
+      if (pointsSentRef.current) {
+        return;
+      }
+
+      // Create a map of player name to total points (batting + bowling)
+      const pointsMap: Record<string, number> = {};
+
+      // Add batsmen points
+      let iplTeam1 = "";
+      batsmenData.forEach(batsman => {
+        if (!iplTeam1) {
+          iplTeam1 = batsman.teamName;
+        }
+        pointsMap[batsman.name] = calculateBatsmanPoints(batsman);
+      });
+
+      // Add or update with bowler points
+      let iplTeam2 = "";
+      bowlersData.forEach((bowler) => {
+        if (!iplTeam2 && bowler.teamSName !== iplTeam1) {
+          iplTeam2 = bowler.teamName; // Set team 2 from bowlers data if it's different from team 1
+        }
+        if (pointsMap[bowler.name]) {
+          pointsMap[bowler.name] += calculateBowlerPoints(bowler);
+        } else {
+          pointsMap[bowler.name] = calculateBowlerPoints(bowler);
+        }
+      });
+
+      const match_id = new URLSearchParams(window.location.search).get('match_id') || undefined;
+      
+      const payload: FantasyPointsRequest = {
+        points: pointsMap,
+        match_id,
+        iplTeam1: iplTeam1,
+        iplTeam2: iplTeam2,
+      };
+
+      // Validate request payload
+      const validatedPayload = FantasyPointsRequestSchema.parse(payload);
+      
+      // Make the API call
+      const accessToken = await authService.getAccessToken();
+      const response = await axios.post(`http://localhost:8080/api/ipl/matches/fantacy-points`,
+        validatedPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+
+      // Validate response
+      const validatedResponse = FantasyPointsResponseSchema.parse(response.data);
+
+      if (validatedResponse.success) {
+        console.log('Fantasy points data sent successfully:', validatedResponse.message);
+      } else {
+        console.error('Failed to send fantasy points:', validatedResponse.message);
+      }
+
+      // Mark that we've sent the points to prevent duplicate calls
+      pointsSentRef.current = true;
+
+    } catch (error) {
+      console.error('Error sending fantasy points data:', error);
+    }
   };
 
   // Use Tailwind dark mode prefix for classes
@@ -275,7 +368,7 @@ function FantasyPointsComponent() {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Fantacy-Points</BreadcrumbPage>
+                <BreadcrumbPage>Fantasy-Points</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>

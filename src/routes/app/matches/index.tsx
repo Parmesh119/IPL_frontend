@@ -174,7 +174,7 @@ const handleViewMatch = async (match) => {
       method: 'GET',
       url: 'https://cricbuzz-cricket.p.rapidapi.com/matches/v1/recent',
       headers: {
-        'x-rapidapi-key': '437ae21e98mshbbf97de3894804ap1c8818jsne569c47ff131',
+        'x-rapidapi-key': '41f3001a6emsh0110854b5b87aaep1692c5jsn31b8a2ce925f',
         'x-rapidapi-host': 'cricbuzz-cricket.p.rapidapi.com'
       }
     };

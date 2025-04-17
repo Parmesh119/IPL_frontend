@@ -107,15 +107,10 @@ function MatchComponent() {
       // Check if the response is an Array directly (as shown in the network tab)
       if (Array.isArray(data)) {
         setMatches(data);
-
-        // --- Pagination Handling for Array Response ---
-        // PROBLEM: Without totalElements/totalPages from backend, we can't do true pagination.
-        // We can only make assumptions based on the current page's data.
         const receivedCount = data.length;
         const requestedSize = filters.size;
         const currentPage = filters.page;
 
-        // Guess totalPages: If we received fewer items than requested, we're likely on the last page.
         // Otherwise, assume there's at least one more page. This is imperfect!
         const guessedTotalPages = (receivedCount < requestedSize) ? currentPage : currentPage + 1;
 
@@ -179,7 +174,7 @@ const handleViewMatch = async (match) => {
       method: 'GET',
       url: 'https://cricbuzz-cricket.p.rapidapi.com/matches/v1/recent',
       headers: {
-        'x-rapidapi-key': 'a095a2501amsh82e9617579e89e3p13ef94jsn2e302d634f12',
+        'x-rapidapi-key': '437ae21e98mshbbf97de3894804ap1c8818jsne569c47ff131',
         'x-rapidapi-host': 'cricbuzz-cricket.p.rapidapi.com'
       }
     };

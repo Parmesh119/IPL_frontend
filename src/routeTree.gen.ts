@@ -24,6 +24,7 @@ import { Route as AppAuctionIndexImport } from './routes/app/auction/index'
 import { Route as AppAccountIndexImport } from './routes/app/account/index'
 import { Route as AppTeamTeamIdImport } from './routes/app/team/$teamId'
 import { Route as AppPlayersPlayerIdImport } from './routes/app/players/$playerId'
+import { Route as AppMatchesFantacyPointsImport } from './routes/app/matches/fantacy-points'
 import { Route as AppMatchesMatchIdImport } from './routes/app/matches/$matchId'
 import { Route as AppAuctionPlayersGetImport } from './routes/app/auction/players/get'
 
@@ -107,6 +108,12 @@ const AppPlayersPlayerIdRoute = AppPlayersPlayerIdImport.update({
   getParentRoute: () => AppRouteRoute,
 } as any)
 
+const AppMatchesFantacyPointsRoute = AppMatchesFantacyPointsImport.update({
+  id: '/matches/fantacy-points',
+  path: '/matches/fantacy-points',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+
 const AppMatchesMatchIdRoute = AppMatchesMatchIdImport.update({
   id: '/matches/$matchId',
   path: '/matches/$matchId',
@@ -156,6 +163,13 @@ declare module '@tanstack/react-router' {
       path: '/matches/$matchId'
       fullPath: '/app/matches/$matchId'
       preLoaderRoute: typeof AppMatchesMatchIdImport
+      parentRoute: typeof AppRouteImport
+    }
+    '/app/matches/fantacy-points': {
+      id: '/app/matches/fantacy-points'
+      path: '/matches/fantacy-points'
+      fullPath: '/app/matches/fantacy-points'
+      preLoaderRoute: typeof AppMatchesFantacyPointsImport
       parentRoute: typeof AppRouteImport
     }
     '/app/players/$playerId': {
@@ -235,6 +249,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteRouteChildren {
   AppMatchesMatchIdRoute: typeof AppMatchesMatchIdRoute
+  AppMatchesFantacyPointsRoute: typeof AppMatchesFantacyPointsRoute
   AppPlayersPlayerIdRoute: typeof AppPlayersPlayerIdRoute
   AppTeamTeamIdRoute: typeof AppTeamTeamIdRoute
   AppAccountIndexRoute: typeof AppAccountIndexRoute
@@ -249,6 +264,7 @@ interface AppRouteRouteChildren {
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppMatchesMatchIdRoute: AppMatchesMatchIdRoute,
+  AppMatchesFantacyPointsRoute: AppMatchesFantacyPointsRoute,
   AppPlayersPlayerIdRoute: AppPlayersPlayerIdRoute,
   AppTeamTeamIdRoute: AppTeamTeamIdRoute,
   AppAccountIndexRoute: AppAccountIndexRoute,
@@ -271,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/app/matches/$matchId': typeof AppMatchesMatchIdRoute
+  '/app/matches/fantacy-points': typeof AppMatchesFantacyPointsRoute
   '/app/players/$playerId': typeof AppPlayersPlayerIdRoute
   '/app/team/$teamId': typeof AppTeamTeamIdRoute
   '/app/account': typeof AppAccountIndexRoute
@@ -289,6 +306,7 @@ export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/app/matches/$matchId': typeof AppMatchesMatchIdRoute
+  '/app/matches/fantacy-points': typeof AppMatchesFantacyPointsRoute
   '/app/players/$playerId': typeof AppPlayersPlayerIdRoute
   '/app/team/$teamId': typeof AppTeamTeamIdRoute
   '/app/account': typeof AppAccountIndexRoute
@@ -308,6 +326,7 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/app/matches/$matchId': typeof AppMatchesMatchIdRoute
+  '/app/matches/fantacy-points': typeof AppMatchesFantacyPointsRoute
   '/app/players/$playerId': typeof AppPlayersPlayerIdRoute
   '/app/team/$teamId': typeof AppTeamTeamIdRoute
   '/app/account/': typeof AppAccountIndexRoute
@@ -328,6 +347,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/register'
     | '/app/matches/$matchId'
+    | '/app/matches/fantacy-points'
     | '/app/players/$playerId'
     | '/app/team/$teamId'
     | '/app/account'
@@ -345,6 +365,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/register'
     | '/app/matches/$matchId'
+    | '/app/matches/fantacy-points'
     | '/app/players/$playerId'
     | '/app/team/$teamId'
     | '/app/account'
@@ -362,6 +383,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/register'
     | '/app/matches/$matchId'
+    | '/app/matches/fantacy-points'
     | '/app/players/$playerId'
     | '/app/team/$teamId'
     | '/app/account/'
@@ -412,6 +434,7 @@ export const routeTree = rootRoute
       "filePath": "app/route.tsx",
       "children": [
         "/app/matches/$matchId",
+        "/app/matches/fantacy-points",
         "/app/players/$playerId",
         "/app/team/$teamId",
         "/app/account/",
@@ -432,6 +455,10 @@ export const routeTree = rootRoute
     },
     "/app/matches/$matchId": {
       "filePath": "app/matches/$matchId.tsx",
+      "parent": "/app"
+    },
+    "/app/matches/fantacy-points": {
+      "filePath": "app/matches/fantacy-points.tsx",
       "parent": "/app"
     },
     "/app/players/$playerId": {

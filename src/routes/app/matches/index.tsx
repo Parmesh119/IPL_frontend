@@ -34,14 +34,16 @@ type ListMatchRequest = {
   page: number // 1-based page number for UI state
   size: number
   search?: string | null
-  type?: string | null // e.g., "today", "tomorrow", "yesterday", or null/All
+  type?: string | null
+  IPL_TEAMS?: string | null
 }
 
 type BackendListMatchRequest = {
   page: number // 0-based page number for backend API
   size: number
   search?: string | null
-  type?: string | null
+  type?: string | null  
+  IPL_TEAMS?: string | null
 }
 
 type Match = {
@@ -82,7 +84,8 @@ function MatchComponent() {
     page: 1,
     size: 10,
     search: null,
-    type: "All"
+    type: "All",
+    IPL_TEAMS: "Chennai Super Kings"
   })
 
   const [searchInput, setSearchInput] = useState("")
@@ -163,131 +166,131 @@ function MatchComponent() {
 
   // Handle View Match - makes API call to get match ID
   // Improved handleViewMatch function with better matching logic
-const handleViewMatch = async (match) => {
-  try {
-    setLoadingMatchId(match.id);
-    
-    // Log which match we're trying to find (for debugging)
-    
-    // API call to get recent matches
-    const options = {
-      method: 'GET',
-      url: 'https://cricbuzz-cricket.p.rapidapi.com/matches/v1/recent',
-      headers: {
-        'x-rapidapi-key': '41f3001a6emsh0110854b5b87aaep1692c5jsn31b8a2ce925f',
-        'x-rapidapi-host': 'cricbuzz-cricket.p.rapidapi.com'
-      }
-    };
+  const handleViewMatch = async (match) => {
+    try {
+      setLoadingMatchId(match.id);
 
-    const response = await axios.request(options);
-    
-    // Extract all matches from all match types for better search
-    let allMatches = [];
-    
-    // Process all typeMatches
-    response.data.typeMatches.forEach(typeMatch => {
-      if (typeMatch.seriesMatches) {
-        typeMatch.seriesMatches.forEach(seriesMatch => {
-          if (seriesMatch.seriesAdWrapper?.matches) {
-            allMatches = [...allMatches, ...seriesMatch.seriesAdWrapper.matches];
-          }
-        });
-      }
-    });
-    
-    
-    // Create team name variants for more flexible matching
-    const team1Variants = [
-      match.team1.toLowerCase(),
-      ...match.team1.toLowerCase().split(' '),
-      match.team1.toLowerCase().replace(/\s+/g, '')
-    ];
-    
-    const team2Variants = [
-      match.team2.toLowerCase(),
-      ...match.team2.toLowerCase().split(' '),
-      match.team2.toLowerCase().replace(/\s+/g, '')
-    ];
-    
-    // Special handling for known abbreviations 
-    const abbreviations = {
-      'dc': ['delhi capitals', 'delhi'],
-      'mi': ['mumbai indians', 'mumbai'],
-      'rcb': ['royal challengers bangalore', 'bangalore'],
-      'csk': ['chennai super kings', 'chennai'],
-      'kkr': ['kolkata knight riders', 'kolkata'],
-      'srh': ['sunrisers hyderabad', 'hyderabad'],
-      'pbks': ['punjab kings', 'punjab'],
-      'rr': ['rajasthan royals', 'rajasthan']
-    };
-    
-    // Add abbreviation variants
-    for (const abbr in abbreviations) {
-      if (team1Variants.includes(abbr.toLowerCase())) {
-        team1Variants.push(...abbreviations[abbr]);
-      }
-      if (team2Variants.includes(abbr.toLowerCase())) {
-        team2Variants.push(...abbreviations[abbr]);
-      }
-    }
-    
-    
-    // First, try to find an exact match (both teams match in either order)
-    let matchedGame = allMatches.find(m => {
-      const t1Name = (m.matchInfo?.team1?.teamName || '').toLowerCase();
-      const t1Short = (m.matchInfo?.team1?.teamSName || '').toLowerCase();
-      const t2Name = (m.matchInfo?.team2?.teamName || '').toLowerCase();
-      const t2Short = (m.matchInfo?.team2?.teamSName || '').toLowerCase();
-      
-      // Case 1: team1 vs team2 (in order)
-      const match1 = team1Variants.some(v => t1Name.includes(v) || t1Short.includes(v)) &&
-                    team2Variants.some(v => t2Name.includes(v) || t2Short.includes(v));
-      
-      // Case 2: team2 vs team1 (reversed order)
-      const match2 = team1Variants.some(v => t2Name.includes(v) || t2Short.includes(v)) &&
-                    team2Variants.some(v => t1Name.includes(v) || t1Short.includes(v));
-      
-      return match1 || match2;
-    });
-    
-    // Special case for DC vs MI - if we're looking for that match specifically
-    if ((match.team1.includes('DC') && match.team2.includes('MI')) || 
-        (match.team1.includes('MI') && match.team2.includes('DC'))) {
-      
-      // Search for Delhi Capitals vs Mumbai Indians
-      const dcMiMatch = allMatches.find(m => {
-        const teams = [
-          (m.matchInfo?.team1?.teamName || '').toLowerCase(), 
-          (m.matchInfo?.team2?.teamName || '').toLowerCase(),
-          (m.matchInfo?.team1?.teamSName || '').toLowerCase(),
-          (m.matchInfo?.team2?.teamSName || '').toLowerCase()
-        ];
-        
-        return (teams.some(t => t.includes('delhi') || t === 'dc') && 
-                teams.some(t => t.includes('mumbai') || t === 'mi'));
+      // Log which match we're trying to find (for debugging)
+
+      // API call to get recent matches
+      const options = {
+        method: 'GET',
+        url: 'https://cricbuzz-cricket.p.rapidapi.com/matches/v1/recent',
+        headers: {
+          'x-rapidapi-key': '41f3001a6emsh0110854b5b87aaep1692c5jsn31b8a2ce925f',
+          'x-rapidapi-host': 'cricbuzz-cricket.p.rapidapi.com'
+        }
+      };
+
+      const response = await axios.request(options);
+
+      // Extract all matches from all match types for better search
+      let allMatches = [];
+
+      // Process all typeMatches
+      response.data.typeMatches.forEach(typeMatch => {
+        if (typeMatch.seriesMatches) {
+          typeMatch.seriesMatches.forEach(seriesMatch => {
+            if (seriesMatch.seriesAdWrapper?.matches) {
+              allMatches = [...allMatches, ...seriesMatch.seriesAdWrapper.matches];
+            }
+          });
+        }
       });
-      
-      if (dcMiMatch) {
-        matchedGame = dcMiMatch;
+
+
+      // Create team name variants for more flexible matching
+      const team1Variants = [
+        match.team1.toLowerCase(),
+        ...match.team1.toLowerCase().split(' '),
+        match.team1.toLowerCase().replace(/\s+/g, '')
+      ];
+
+      const team2Variants = [
+        match.team2.toLowerCase(),
+        ...match.team2.toLowerCase().split(' '),
+        match.team2.toLowerCase().replace(/\s+/g, '')
+      ];
+
+      // Special handling for known abbreviations 
+      const abbreviations = {
+        'dc': ['delhi capitals', 'delhi'],
+        'mi': ['mumbai indians', 'mumbai'],
+        'rcb': ['royal challengers bangalore', 'bangalore'],
+        'csk': ['chennai super kings', 'chennai'],
+        'kkr': ['kolkata knight riders', 'kolkata'],
+        'srh': ['sunrisers hyderabad', 'hyderabad'],
+        'pbks': ['punjab kings', 'punjab'],
+        'rr': ['rajasthan royals', 'rajasthan']
+      };
+
+      // Add abbreviation variants
+      for (const abbr in abbreviations) {
+        if (team1Variants.includes(abbr.toLowerCase())) {
+          team1Variants.push(...abbreviations[abbr]);
+        }
+        if (team2Variants.includes(abbr.toLowerCase())) {
+          team2Variants.push(...abbreviations[abbr]);
+        }
       }
-    }
-    
-    // If we found a match, display the ID
-    if (matchedGame) {
-      const matchId = matchedGame.matchInfo.matchId;
-      navigate({ to: `/app/matches/${matchId}` });
-    }
-  } catch (error) {
-    
-    // Special case handling for known matches when API fails
-    if ((match.team1.includes('DC') && match.team2.includes('MI')) || 
+
+
+      // First, try to find an exact match (both teams match in either order)
+      let matchedGame = allMatches.find(m => {
+        const t1Name = (m.matchInfo?.team1?.teamName || '').toLowerCase();
+        const t1Short = (m.matchInfo?.team1?.teamSName || '').toLowerCase();
+        const t2Name = (m.matchInfo?.team2?.teamName || '').toLowerCase();
+        const t2Short = (m.matchInfo?.team2?.teamSName || '').toLowerCase();
+
+        // Case 1: team1 vs team2 (in order)
+        const match1 = team1Variants.some(v => t1Name.includes(v) || t1Short.includes(v)) &&
+          team2Variants.some(v => t2Name.includes(v) || t2Short.includes(v));
+
+        // Case 2: team2 vs team1 (reversed order)
+        const match2 = team1Variants.some(v => t2Name.includes(v) || t2Short.includes(v)) &&
+          team2Variants.some(v => t1Name.includes(v) || t1Short.includes(v));
+
+        return match1 || match2;
+      });
+
+      // Special case for DC vs MI - if we're looking for that match specifically
+      if ((match.team1.includes('DC') && match.team2.includes('MI')) ||
         (match.team1.includes('MI') && match.team2.includes('DC'))) {
-    } else {
+
+        // Search for Delhi Capitals vs Mumbai Indians
+        const dcMiMatch = allMatches.find(m => {
+          const teams = [
+            (m.matchInfo?.team1?.teamName || '').toLowerCase(),
+            (m.matchInfo?.team2?.teamName || '').toLowerCase(),
+            (m.matchInfo?.team1?.teamSName || '').toLowerCase(),
+            (m.matchInfo?.team2?.teamSName || '').toLowerCase()
+          ];
+
+          return (teams.some(t => t.includes('delhi') || t === 'dc') &&
+            teams.some(t => t.includes('mumbai') || t === 'mi'));
+        });
+
+        if (dcMiMatch) {
+          matchedGame = dcMiMatch;
+        }
+      }
+
+      // If we found a match, display the ID
+      if (matchedGame) {
+        const matchId = matchedGame.matchInfo.matchId;
+        navigate({ to: `/app/matches/${matchId}` });
+      }
+    } catch (error) {
+
+      // Special case handling for known matches when API fails
+      if ((match.team1.includes('DC') && match.team2.includes('MI')) ||
+        (match.team1.includes('MI') && match.team2.includes('DC'))) {
+      } else {
+      }
+    } finally {
+      setLoadingMatchId(null);
     }
-  } finally {
-    setLoadingMatchId(null);
-  }
-};
+  };
 
   // Debounced search handler
   const debouncedSearch = useCallback(
@@ -304,12 +307,17 @@ const handleViewMatch = async (match) => {
   // Effect to trigger fetch when filters change
   useEffect(() => {
     const backendRequest: BackendListMatchRequest = {
-      ...filters,
       page: filters.page - 1, // Convert 1-based UI page to 0-based backend page
-      type: filters.type === "All" ? null : filters.type
-    }
-    mutate(backendRequest)
-  }, [filters, mutate]) // Include mutate
+      size: filters.size,
+      search: filters.search || null,
+      type: filters.type === "All" ? null : filters.type,
+      IPL_TEAMS: filters.IPL_TEAMS || null, // Include the IPL_TEAM filter
+    };
+
+    console.log("Request being sent to backend:", backendRequest); // Debugging log
+
+    mutate(backendRequest);
+  }, [filters, mutate]); // Include mutate
 
   // Cleanup debounce on unmount
   useEffect(() => {
@@ -410,6 +418,28 @@ const handleViewMatch = async (match) => {
   // --- RENDER LOGIC ---
   const showPagination = pagination.totalItems === -1 ? (matches.length > 0) : (pagination.totalPages > 1);
   const isNextDisabled = pagination.totalItems === -1 ? (matches.length < pagination.pageSize) : (pagination.currentPage === pagination.totalPages);
+
+  const IPL_TEAMS = [
+    "Chennai Super Kings",
+    "Mumbai Indians",
+    "Royal Challengers Bangalore",
+    "Kolkata Knight Riders",
+    "Rajasthan Royals",
+    "Delhi Capitals",
+    "Sunrisers Hyderabad",
+    "Punjab Kings",
+    "Lucknow Super Giants",
+    "Gujarat Titans"
+  ];
+
+  const handleIPLTEAMChange = (value: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      IPL_TEAMS: value, // Update the IPL_TEAM filter
+      page: 1, // Reset to the first page
+    }));
+  };
+
 
   return (
     <SidebarInset className="w-full">
@@ -532,21 +562,36 @@ const handleViewMatch = async (match) => {
               className="w-full md:w-64 pl-9"
             />
             <div className="flex items-center space-x-4 w-full md:w-auto">
-            <Select
-              onValueChange={handleTypeChange}
-              value={filters.type || "All"}
-            >
-              <SelectTrigger className="w-full md:w-40">
-                <SelectValue placeholder="Filter by time..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">ALL</SelectItem>
-                <SelectItem value="today">TODAY</SelectItem>
-                <SelectItem value="tomorrow">TOMORROW</SelectItem>
-                <SelectItem value="yesterday">YESTERDAY</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              <Select
+                onValueChange={handleTypeChange}
+                value={filters.type || "All"}
+              >
+                <SelectTrigger className="w-full md:w-40">
+                  <SelectValue placeholder="Filter by time..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">ALL</SelectItem>
+                  <SelectItem value="today">TODAY</SelectItem>
+                  <SelectItem value="tomorrow">TOMORROW</SelectItem>
+                  <SelectItem value="yesterday">YESTERDAY</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                onValueChange={handleIPLTEAMChange}
+                value={filters.IPL_TEAMS || IPL_TEAMS[0]} // Default to the first team if no team is selected
+              >
+                <SelectTrigger className="w-full md:w-40">
+                  <SelectValue placeholder="Filter by IPL TEAM ..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {IPL_TEAMS.map((team) => (
+                    <SelectItem key={team} value={team}>
+                      {team}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           {showPagination && (
             <div className="flex flex-col items-center justify-center mt-8 space-y-2">
@@ -583,7 +628,7 @@ const handleViewMatch = async (match) => {
               </div>
             </div>
           )}
-          
+
 
         </div>
 

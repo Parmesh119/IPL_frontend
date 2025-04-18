@@ -18,4 +18,5 @@ export type ListMatchRequest = {
     size: number
     search?: string | null
     type?: string | null
+    IPL_TEAMS?: string | null
 }

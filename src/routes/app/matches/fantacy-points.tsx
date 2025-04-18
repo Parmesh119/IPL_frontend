@@ -79,7 +79,7 @@ function FantasyPointsComponent() {
   const [batsmenData, setBatsmenData] = useState<RawInningsBatsman[]>([]);
   const [bowlersData, setBowlersData] = useState<RawInningsBowler[]>([]);
   const [dataLoaded, setDataLoaded] = useState(false);
-
+  
   // Use useRef to track if we've already sent the request
   const pointsSentRef = useRef(false);
 
@@ -277,75 +277,78 @@ function FantasyPointsComponent() {
 
   // Function to send points to backend
   const sendPointsToBackend = async () => {
-    try {
-      // Skip if we've already sent the points
-      if (pointsSentRef.current) {
-        return;
-      }
-
-      // Create a map of player name to total points (batting + bowling)
-      const pointsMap: Record<string, number> = {};
-
-      // Add batsmen points
-      let iplTeam1 = "";
-      batsmenData.forEach(batsman => {
-        if (!iplTeam1) {
-          iplTeam1 = batsman.teamName;
-        }
-        pointsMap[batsman.name] = calculateBatsmanPoints(batsman);
-      });
-
-      // Add or update with bowler points
-      let iplTeam2 = "";
-      bowlersData.forEach((bowler) => {
-        if (!iplTeam2 && bowler.teamSName !== iplTeam1) {
-          iplTeam2 = bowler.teamName; // Set team 2 from bowlers data if it's different from team 1
-        }
-        if (pointsMap[bowler.name]) {
-          pointsMap[bowler.name] += calculateBowlerPoints(bowler);
-        } else {
-          pointsMap[bowler.name] = calculateBowlerPoints(bowler);
-        }
-      });
-
-      const match_id = new URLSearchParams(window.location.search).get('match_id') || undefined;
-      
-      const payload: FantasyPointsRequest = {
-        points: pointsMap,
-        match_id,
-        iplTeam1: iplTeam1,
-        iplTeam2: iplTeam2,
-      };
-
-      // Validate request payload
-      const validatedPayload = FantasyPointsRequestSchema.parse(payload);
-      
-      // Make the API call
-      const accessToken = await authService.getAccessToken();
-      const response = await axios.post(`http://localhost:8080/api/ipl/matches/fantacy-points`,
-        validatedPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
-          }
-        });
-
-      // Validate response
-      const validatedResponse = FantasyPointsResponseSchema.parse(response.data);
-
-      if (validatedResponse.success) {
-        console.log('Fantasy points data sent successfully:', validatedResponse.message);
-      } else {
-        console.error('Failed to send fantasy points:', validatedResponse.message);
-      }
-
-      // Mark that we've sent the points to prevent duplicate calls
-      pointsSentRef.current = true;
-
-    } catch (error) {
-      console.error('Error sending fantasy points data:', error);
+  try {
+    // Skip if we've already sent the points
+    if (pointsSentRef.current) {
+      return;
     }
-  };
+
+    // Create a map of player name to total points (batting + bowling)
+    const pointsMap: Record<string, number> = {};
+
+    // Add batsmen points
+    let iplTeam1 = "";
+    let iplTeam2 = ""; // Initialize team 2 here
+    batsmenData.forEach((batsman) => {
+      if (!iplTeam1) {
+        iplTeam1 = batsman.teamSName; // Set team 1 from batsmen data
+      }
+      pointsMap[batsman.name] = calculateBatsmanPoints(batsman);
+    });
+
+    // Add or update with bowler points
+    bowlersData.forEach((bowler) => {
+      if (!iplTeam2 && bowler.teamSName !== iplTeam1) {
+        iplTeam2 = bowler.teamSName; // Set team 2 from bowlers data if it's different from team 1
+      }
+      if (pointsMap[bowler.name]) {
+        pointsMap[bowler.name] += calculateBowlerPoints(bowler);
+      } else {
+        pointsMap[bowler.name] = calculateBowlerPoints(bowler);
+      }
+    });
+
+    // Get match_id from URL or other source if available
+    const match_id = new URLSearchParams(window.location.search).get("match_id") || undefined;
+
+    // Create the request payload
+    const payload: FantasyPointsRequest = {
+      points: pointsMap,
+      match_id,
+      iplTeam1: iplTeam1,
+      iplTeam2: iplTeam2,
+    };
+
+    // Validate request payload
+    const validatedPayload = FantasyPointsRequestSchema.parse(payload);
+
+    // Make the API call
+    const accessToken = await authService.getAccessToken();
+    const response = await axios.post(
+      `http://localhost:8080/api/ipl/matches/fantacy-points`,
+      validatedPayload,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    // Validate response
+    const validatedResponse = FantasyPointsResponseSchema.parse(response.data);
+
+    if (validatedResponse.success) {
+      console.log("Fantasy points data sent successfully:", validatedResponse.message);
+    } else {
+      console.error("Failed to send fantasy points:", validatedResponse.message);
+    }
+
+    // Mark that we've sent the points to prevent duplicate calls
+    pointsSentRef.current = true;
+  } catch (error) {
+    console.error("Error sending fantasy points data:", error);
+  }
+};
 
   // Use Tailwind dark mode prefix for classes
   const containerClasses = "p-4 max-w-full mx-auto bg-white dark:bg-gray-900 text-gray-800 dark:text-white min-h-screen";

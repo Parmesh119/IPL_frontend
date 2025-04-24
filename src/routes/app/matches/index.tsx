@@ -42,7 +42,7 @@ type BackendListMatchRequest = {
   page: number // 0-based page number for backend API
   size: number
   search?: string | null
-  type?: string | null  
+  type?: string | null
   IPL_TEAMS?: string | null
 }
 
@@ -335,7 +335,7 @@ function MatchComponent() {
   const handleTypeChange = (value: string) => {
     setFilters(prev => ({
       ...prev,
-      type: value,
+      type: value === "All" ? null : value,
       page: 1 // Reset to first page
     }))
   }
@@ -422,7 +422,7 @@ function MatchComponent() {
   const IPL_TEAMS = [
     "Chennai Super Kings",
     "Mumbai Indians",
-    "Royal Challengers Bangalore",
+    "Royal Challengers Bengaluru",
     "Kolkata Knight Riders",
     "Rajasthan Royals",
     "Delhi Capitals",
@@ -634,7 +634,7 @@ function MatchComponent() {
 
         {/* Loading State */}
         {isPending && (
-          <div className="flex justify-center items-center py-10">
+          <div className="flex justify-center items-center py-10 m-auto">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
             <span className="ml-3 text-gray-600 dark:text-gray-400">Loading matches...</span>
           </div>
